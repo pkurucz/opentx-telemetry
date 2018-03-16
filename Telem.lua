@@ -6,16 +6,20 @@
 
              Based on 'olimetry.lua' by Ollicious <bowdown@gmx.net>
 
-	            Adapted for dRonin by <yds@Necessitu.de>
+                    Adapted for dRonin by <yds@Necessitu.de>
 --]]
 
 
 -- settings  -------------------------------------------------------------------
 
-local widgets  = { {"battery"},
-                   {"gps", "alt", "speed"},
-                   {"mode", "dist", "timer"},
-                   {"rssi"} }
+local srcAltd = "GAlt"	-- "Alt" for barometric or "GAlt" GPS altitude
+local srcLink = "RSSI"	-- "RSSI" or "LQ" for Crossfire
+local widgets = {
+                  {"battery"},
+                  {"gps", "alt", "speed"},
+                  {"mode", "dist", "timer"},
+                  {"rssi"}
+                }
 local cellMaxV = 4.20
 local cellMinV = 3.60
 
@@ -71,11 +75,11 @@ end
 
 local function rssiWidget(x, y)
 
-    local db = getValue("RSSI")
+    local link = getValue(srcLink)
     local percent = 0
 
-    if db > 38 then
-        percent = (math.log(db-28, 10) - 1) / (math.log(72, 10) - 1) * 100
+    if link > 38 then
+        percent = (math.log(link-28, 10) - 1) / (math.log(72, 10) - 1) * 100
     end
 
     local pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh00.bmp"
@@ -92,7 +96,7 @@ local function rssiWidget(x, y)
     end
 
     lcd.drawPixmap(x+4, y+1, pixmap)
-    lcd.drawText(x+6, y+54, db .. "dB", 0)
+    lcd.drawText(x+6, y+54, link .. "dB", 0)
 
 end
 
@@ -110,10 +114,10 @@ end
 
 local function altitudeWidget(x, y)
 
-    local height = getValue("GAlt")
+    local altitude = getValue(srcAltd)
 
     lcd.drawPixmap(x+1, y+2, "/SCRIPTS/TELEMETRY/GFX/hgt.bmp")
-    lcd.drawNumber(x+18, y+7, height, LEFT)
+    lcd.drawNumber(x+18, y+7, altitude, LEFT)
     lcd.drawText(lcd.getLastPos(), y+7, "m", 0)
 
 end
