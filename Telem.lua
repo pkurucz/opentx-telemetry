@@ -11,8 +11,8 @@
 -- settings  -------------------------------------------------------------------
 
 local widgets  = { {"battery"},
-                   {"fm", "gps","timer"},
-                   {"dist", "alt", "speed"},
+                   {"gps", "alt", "speed"},
+                   {"fm", "dist", "timer"},
                    {"rssi"} }
 local cellMaxV = 4.20
 local cellMinV = 3.60
@@ -35,7 +35,7 @@ local function batteryWidget(xCoord, yCoord)
     lcd.drawFilledRectangle(xCoord+13, yCoord+7, 5, 2, 0)
     lcd.drawRectangle(xCoord+10, yCoord+9, 11, 40)
 
-    local cellVolt = getValue("Cell")
+    local cellVolt = getValue("Cels")
 
     local availV = 0
     if cellVolt > cellMaxV then
@@ -98,13 +98,9 @@ end
 
 local function distWidget(xCoord, yCoord)
 
-    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/dist.bmp")
-
     local dist = getValue("Dist")
-    if simModeOn == 1 then
-        dist = tdist
-    end
 
+    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/dist.bmp")
     lcd.drawNumber(xCoord+18, yCoord+7, dist, LEFT)
     lcd.drawText(lcd.getLastPos(), yCoord+7, "m", 0)
 
@@ -113,13 +109,9 @@ end
 
 local function altitudeWidget(xCoord, yCoord)
 
-    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/hgt.bmp")
-
     local height = getValue("GAlt")
-    if simModeOn == 1 then
-        height = theight
-    end
 
+    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/hgt.bmp")
     lcd.drawNumber(xCoord+18, yCoord+7, height, LEFT)
     lcd.drawText(lcd.getLastPos(), yCoord+7, "m", 0)
 
@@ -128,10 +120,9 @@ end
 
 local function speedWidget(xCoord, yCoord)
 
-    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/speed.bmp")
-
     local speed = getValue("GSpd") * 3.6
 
+    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/speed.bmp")
     lcd.drawNumber(xCoord+18, yCoord+7, speed, LEFT)
     lcd.drawText(lcd.getLastPos(), yCoord+7, "kmh", 0)
 
@@ -140,10 +131,9 @@ end
 
 local function headingWidget(xCoord, yCoord)
 
-    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/compass.bmp")
-
     local heading = getValue("Hdg")
 
+    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/compass.bmp")
     lcd.drawNumber(xCoord+18, yCoord+7, heading, LEFT)
     lcd.drawText(lcd.getLastPos(), yCoord+7, "dg", 0)
 
@@ -152,27 +142,35 @@ end
 
 local function fmWidget(xCoord, yCoord)
 
-    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/fm.bmp")
-
-    local mode  = " ?"
     local style = MIDSIZE
+    local mode = getValue("RPM")
+    local armed = math.floor(mode * 0.01) == 1
 
+    mode = math.floor(mode % 100)
+  
     if getValue("RSSI") <= 20 then
-        mode = "N/A"
+        mode = "No RX"
         style = style + BLINK
-    elseif getValue("ch8") > 0 then
-        mode = "COFF"
-        style = style + BLINK + INVERS
-    elseif getValue("ch7") > 0 then
-        mode = "RTH"
-    elseif getValue("ch5") < 0 then
-        mode = "POS"
-    elseif getValue("ch5") == 0 then
-        mode = "STA"
-    elseif getValue("ch5") > 0 then
-        mode = "ALT"
+    elseif mode ==  0 then mode = "Manual"
+    elseif mode ==  1 then mode = "Acro"
+    elseif mode ==  2 then mode = "Level"
+    elseif mode ==  3 then mode = "Horizon"
+    elseif mode ==  4 then mode = "AxisLck"
+    elseif mode ==  5 then mode = "VirtBar"
+    elseif mode ==  6 then mode = "Stabil1"
+    elseif mode ==  7 then mode = "Stabil2"
+    elseif mode ==  8 then mode = "Stabil3"
+    elseif mode ==  9 then mode = "Tune";	style = style + BLINK
+    elseif mode == 10 then mode = "AltHold"
+    elseif mode == 11 then mode = "PosHold"
+    elseif mode == 12 then mode = "RToHome"
+    elseif mode == 13 then mode = "PathPln"
+    elseif mode == 15 then mode = "Acro+"
+    elseif mode == 16 then mode = "AcrDyn"
+    elseif mode == 17 then mode = "Fail";	style = style + BLINK
     end
 
+    lcd.drawPixmap(xCoord+1, yCoord+2, "/SCRIPTS/TELEMETRY/GFX/fm.bmp")
     lcd.drawText(xCoord+20, yCoord+4, mode, style)
 
 end
@@ -188,8 +186,8 @@ end
 
 local function gpsWidget(xCoord,yCoord)
 
-    local sats = (simModeOn == 1) and tsats or getValue("Sats")
-    local fix  = (simModeOn == 1) and tfix or getValue("Fix")
+    local sats = getValue("Sats")
+    local fix  = getValue("Fix")
 
     local fixImg = "/SCRIPTS/TELEMETRY/GFX/sat0.bmp"
     if fix == 2 then fixImg = "/SCRIPTS/TELEMETRY/GFX/sat1.bmp"
@@ -265,13 +263,13 @@ local function init()
 
     widgetTable["alt"] = altitudeWidget
     widgetTable["battery"] = batteryWidget
+    widgetTable["dist"] = distWidget
     widgetTable["fm"] = fmWidget
     widgetTable["gps"] = gpsWidget
-    widgetTable["timer"] = timerWidget
-    widgetTable["dist"] = distWidget
-    widgetTable["rssi"] = rssiWidget
     widgetTable["heading"] = headingWidget
+    widgetTable["rssi"] = rssiWidget
     widgetTable["speed"] = speedWidget
+    widgetTable["timer"] = timerWidget
 
     local numSingleCols = 0
     local numMultiCols  = 0
