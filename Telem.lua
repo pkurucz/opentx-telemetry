@@ -232,28 +232,27 @@ local function run(event)
 
     lcd.clear()
 
-    local tempSumX = -1
-    local tempSumY = -1
-    local xOffset
+    local x = -1
+    local y = -1
+    local c
 
     for col=1, #widgets, 1
     do
         if (#widgets[col] == 1) then
-            xOffset = widgetWidthSingle
+            c = widgetWidthSingle
         else
-            xOffset = widgetWidthMulti
+            c = widgetWidthMulti
         end
 
         for row=1, #widgets[col], 1
         do
-            lcd.drawLine(tempSumX, tempSumY, tempSumX+xOffset, tempSumY, SOLID,
-                         GREY_DEFAULT)
-            callWidget(widgets[col][row], tempSumX+1, tempSumY+1)
-            tempSumY = tempSumY + math.floor(displayHeight/#widgets[col])
+            lcd.drawLine(x, y, x+c, y, SOLID, GREY_DEFAULT)
+            callWidget(widgets[col][row], x+1, y+1)
+            y = y + math.floor(displayHeight/#widgets[col])
         end
 
-        tempSumY = -1
-        tempSumX = tempSumX + xOffset
+        y = -1
+        x = x + c
     end
 
 end
