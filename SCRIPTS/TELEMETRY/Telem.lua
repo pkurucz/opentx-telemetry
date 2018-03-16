@@ -82,17 +82,17 @@ local function rssiWidget(x, y)
         percent = (math.log(link-28, 10) - 1) / (math.log(72, 10) - 1) * 100
     end
 
-    local pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh00.bmp"
-    if     percent > 90 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh10.bmp"
-    elseif percent > 80 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh09.bmp"
-    elseif percent > 70 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh08.bmp"
-    elseif percent > 60 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh07.bmp"
-    elseif percent > 50 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh06.bmp"
-    elseif percent > 40 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh05.bmp"
-    elseif percent > 30 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh04.bmp"
-    elseif percent > 20 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh03.bmp"
-    elseif percent > 10 then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh02.bmp"
-    elseif percent > 0  then pixmap = "/SCRIPTS/TELEMETRY/GFX/RSSIh01.bmp"
+    local pixmap = "/IMAGES/TELEM/RSSIh00.bmp"
+    if     percent > 90 then pixmap = "/IMAGES/TELEM/RSSIh10.bmp"
+    elseif percent > 80 then pixmap = "/IMAGES/TELEM/RSSIh09.bmp"
+    elseif percent > 70 then pixmap = "/IMAGES/TELEM/RSSIh08.bmp"
+    elseif percent > 60 then pixmap = "/IMAGES/TELEM/RSSIh07.bmp"
+    elseif percent > 50 then pixmap = "/IMAGES/TELEM/RSSIh06.bmp"
+    elseif percent > 40 then pixmap = "/IMAGES/TELEM/RSSIh05.bmp"
+    elseif percent > 30 then pixmap = "/IMAGES/TELEM/RSSIh04.bmp"
+    elseif percent > 20 then pixmap = "/IMAGES/TELEM/RSSIh03.bmp"
+    elseif percent > 10 then pixmap = "/IMAGES/TELEM/RSSIh02.bmp"
+    elseif percent > 0  then pixmap = "/IMAGES/TELEM/RSSIh01.bmp"
     end
 
     lcd.drawPixmap(x+4, y+1, pixmap)
@@ -105,7 +105,7 @@ local function distWidget(x, y)
 
     local dist = getValue("Dist")
 
-    lcd.drawPixmap(x+1, y+2, "/SCRIPTS/TELEMETRY/GFX/dist.bmp")
+    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/dist.bmp")
     lcd.drawNumber(x+18, y+7, dist, LEFT)
     lcd.drawText(lcd.getLastPos(), y+7, "m", 0)
 
@@ -116,7 +116,7 @@ local function altitudeWidget(x, y)
 
     local altitude = getValue(srcAltd)
 
-    lcd.drawPixmap(x+1, y+2, "/SCRIPTS/TELEMETRY/GFX/hgt.bmp")
+    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/hgt.bmp")
     lcd.drawNumber(x+18, y+7, altitude, LEFT)
     lcd.drawText(lcd.getLastPos(), y+7, "m", 0)
 
@@ -127,7 +127,7 @@ local function speedWidget(x, y)
 
     local speed = getValue("GSpd") * 3.6
 
-    lcd.drawPixmap(x+1, y+2, "/SCRIPTS/TELEMETRY/GFX/speed.bmp")
+    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/speed.bmp")
     lcd.drawNumber(x+18, y+7, speed, LEFT)
     lcd.drawText(lcd.getLastPos(), y+7, "kmh", 0)
 
@@ -138,7 +138,7 @@ local function headingWidget(x, y)
 
     local heading = getValue("Hdg")
 
-    lcd.drawPixmap(x+1, y+2, "/SCRIPTS/TELEMETRY/GFX/compass.bmp")
+    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/compass.bmp")
     lcd.drawNumber(x+18, y+7, heading, LEFT)
     lcd.drawText(lcd.getLastPos(), y+7, "dg", 0)
 
@@ -150,37 +150,39 @@ local function modeWidget(x, y)
     local style = MIDSIZE
     local mode = getValue("RPM")
     local armed = math.floor(mode * 0.01) == 1
+    local sound
 
     mode = math.floor(mode % 100)
   
-    if     mode ==  0 then mode = "Manual"
-    elseif mode ==  1 then mode = "Acro"
-    elseif mode ==  2 then mode = "Level"
-    elseif mode ==  3 then mode = "Horizon"
-    elseif mode ==  4 then mode = "AxisLck"
-    elseif mode ==  5 then mode = "VirtBar"
-    elseif mode ==  6 then mode = "Stabil1"
-    elseif mode ==  7 then mode = "Stabil2"
-    elseif mode ==  8 then mode = "Stabil3"
-    elseif mode ==  9 then mode = "Tune";	style = style + BLINK
-    elseif mode == 10 then mode = "AltHold"
-    elseif mode == 11 then mode = "PosHold"
-    elseif mode == 12 then mode = "RToHome"
-    elseif mode == 13 then mode = "PathPln"
-    elseif mode == 15 then mode = "Acro+"
-    elseif mode == 16 then mode = "AcrDyn"
-    elseif mode == 17 then mode = "Fail";	style = style + BLINK
+    if     mode ==  0 then mode = "Manual";	sound = "fm-manl"
+    elseif mode ==  1 then mode = "Acro";	sound = "fm-acr"
+    elseif mode ==  2 then mode = "Level";	sound = "fm-lvl"
+    elseif mode ==  3 then mode = "Horizon";	sound = "fm-hrzn"
+    elseif mode ==  4 then mode = "AxisLck";	sound = "fm-axlk"
+    elseif mode ==  5 then mode = "VirtBar";	sound = "fm-vbar"
+    elseif mode ==  6 then mode = "Stabil1";	sound = "fm-stbl"
+    elseif mode ==  7 then mode = "Stabil2";	sound = "fm-stbl"
+    elseif mode ==  8 then mode = "Stabil3";	sound = "fm-stbl"
+    elseif mode ==  9 then mode = "Tune";	sound = "fm-tune";	style = style + BLINK
+    elseif mode == 10 then mode = "AltHold";	sound = "fm-ahld"
+    elseif mode == 11 then mode = "PosHold";	sound = "fm-phld"
+    elseif mode == 12 then mode = "RToHome";	sound = "fm-rth"
+    elseif mode == 13 then mode = "PathPln";	sound = "fm-plan"
+    elseif mode == 15 then mode = "Acro+";	sound = "fm-acr"
+    elseif mode == 16 then mode = "AcrDyn";	sound = "fm-acr"
+    elseif mode == 17 then mode = "Fail";	sound = "fm-fail";	style = style + BLINK
     end
 
-    lcd.drawPixmap(x+1, y+2, "/SCRIPTS/TELEMETRY/GFX/fm.bmp")
+    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
     lcd.drawText(x+20, y+4, mode, style)
+    playFile(sound)
 
 end
 
 
 local function timerWidget(x, y)
 
-    lcd.drawPixmap(x+1, y+3, "/SCRIPTS/TELEMETRY/GFX/timer_1.bmp")
+    lcd.drawPixmap(x+1, y+3, "/IMAGES/TELEM/timer_1.bmp")
     lcd.drawTimer(x+18, y+8, getValue(196), 0)
 
 end
@@ -191,19 +193,19 @@ local function gpsWidget(x,y)
     local sats = getValue("Sats")
     local fix  = getValue("Fix")
 
-    local fixImg = "/SCRIPTS/TELEMETRY/GFX/sat0.bmp"
-    if     fix == 2 then fixImg = "/SCRIPTS/TELEMETRY/GFX/sat1.bmp"
-    elseif fix == 3 then fixImg = "/SCRIPTS/TELEMETRY/GFX/sat2.bmp"
-    elseif fix == 4 then fixImg = "/SCRIPTS/TELEMETRY/GFX/sat3.bmp"
+    local fixImg = "/IMAGES/TELEM/sat0.bmp"
+    if     fix == 2 then fixImg = "/IMAGES/TELEM/sat1.bmp"
+    elseif fix == 3 then fixImg = "/IMAGES/TELEM/sat2.bmp"
+    elseif fix == 4 then fixImg = "/IMAGES/TELEM/sat3.bmp"
     end
 
-    local satImg = "/SCRIPTS/TELEMETRY/GFX/gps_0.bmp"
-    if     sats > 5 then satImg = "/SCRIPTS/TELEMETRY/GFX/gps_6.bmp"
-    elseif sats > 4 then satImg = "/SCRIPTS/TELEMETRY/GFX/gps_5.bmp"
-    elseif sats > 3 then satImg = "/SCRIPTS/TELEMETRY/GFX/gps_4.bmp"
-    elseif sats > 2 then satImg = "/SCRIPTS/TELEMETRY/GFX/gps_3.bmp"
-    elseif sats > 1 then satImg = "/SCRIPTS/TELEMETRY/GFX/gps_2.bmp"
-    elseif sats > 0 then satImg = "/SCRIPTS/TELEMETRY/GFX/gps_1.bmp"
+    local satImg = "/IMAGES/TELEM/gps_0.bmp"
+    if     sats > 5 then satImg = "/IMAGES/TELEM/gps_6.bmp"
+    elseif sats > 4 then satImg = "/IMAGES/TELEM/gps_5.bmp"
+    elseif sats > 3 then satImg = "/IMAGES/TELEM/gps_4.bmp"
+    elseif sats > 2 then satImg = "/IMAGES/TELEM/gps_3.bmp"
+    elseif sats > 1 then satImg = "/IMAGES/TELEM/gps_2.bmp"
+    elseif sats > 0 then satImg = "/IMAGES/TELEM/gps_1.bmp"
     end
 
     lcd.drawPixmap(x+1, y+1, fixImg)

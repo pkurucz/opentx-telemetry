@@ -17,8 +17,8 @@ Companion 2.1 simulation.
 ![](https://github.com/lynix/opentx-telemetry/blob/master/screenshot.png)
 
 ## Usage
-* copy _telemetry.lua_ and the _GFX_ folder to _/SCRIPTS/TELEMETRY/_ on the
-  taranis sd card
+* copy _/IMAGES/_ and _/SCRIPTS/_ folders to the same folders on the Taranis
+  SD card
 * edit constants in the `settings` section to meet your needs
 * for the flight mode widget to work, you almost certainly need to edit the code
   (`fmWidget()`) to fit your channel and mode bindings
