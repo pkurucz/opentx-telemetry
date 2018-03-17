@@ -209,8 +209,8 @@ end
 local function modeWidget(x, y)
 
     local style = MIDSIZE
-    local sound
-    local mode
+    local sound = ""
+    local mode = ""
     local m = getValue("RPM")
     local armed = math.floor(m * 0.01) == 1
 
