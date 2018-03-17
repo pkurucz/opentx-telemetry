@@ -164,14 +164,15 @@ local function rssiWidget(x, y)
     elseif percent > 30 then pixmap = "/IMAGES/TELEM/RSSIh04.bmp"
     elseif percent > 20 then pixmap = "/IMAGES/TELEM/RSSIh03.bmp"
     elseif percent > 10 then pixmap = "/IMAGES/TELEM/RSSIh02.bmp"
-    elseif percent > 0  then pixmap = "/IMAGES/TELEM/RSSIh01.bmp"
+    elseif percent >  0 then pixmap = "/IMAGES/TELEM/RSSIh01.bmp"
     end
 
     drawPixmap(x+4, y+1, pixmap)
     if displayFrame == 0 then
 	drawText(x+6, y+54, linq .. "dB", 0)
     elseif displayFrame == 1 then
-	drawText(x+6, y+54, percent .. "%", 0)
+	drawNumber(x+6, y+54, percent*10, PREC1)
+	drawText(getLastPos(), y+54, "%", 0)
     end
 
 end
