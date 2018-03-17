@@ -168,7 +168,11 @@ local function rssiWidget(x, y)
     end
 
     drawPixmap(x+4, y+1, pixmap)
-    drawText(x+6, y+54, linq .. "dB", 0)
+    if displayFrame == 0 then
+	drawText(x+6, y+54, linq .. "dB", 0)
+    elseif displayFrame == 1 then
+	drawText(x+6, y+54, percent .. "%", 0)
+    end
 
 end
 
