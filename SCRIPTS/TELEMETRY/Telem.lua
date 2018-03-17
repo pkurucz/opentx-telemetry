@@ -134,7 +134,7 @@ end
 local function rssiWidget(x, y)
 
     linq = getValue("RQly")	-- Crossfire Rx Link Quality
-    if type(linq) == "number" then
+    if linq == 0 then
 	linq = getValue("RSSI")	-- FrSky et al
     end
         
