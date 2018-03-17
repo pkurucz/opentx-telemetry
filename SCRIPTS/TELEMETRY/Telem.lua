@@ -26,6 +26,7 @@ local cellMinV = 3.60
 
 -- globals  --------------------------------------------------------------------
 
+local prevMode		= 0
 local displayWidth	= 212
 local displayHeight	= 64
 local widgetWidthSingle	= 35
@@ -148,34 +149,39 @@ end
 local function modeWidget(x, y)
 
     local style = MIDSIZE
-    local mode = getValue("RPM")
-    local armed = math.floor(mode * 0.01) == 1
     local sound
+    local mode
+    local m = getValue("RPM")
+    local armed = math.floor(m * 0.01) == 1
 
-    mode = math.floor(mode % 100)
+    m = math.floor(m % 100)
   
-    if     mode ==  0 then mode = "Manual";	sound = "fm-manl"
-    elseif mode ==  1 then mode = "Acro";	sound = "fm-acr"
-    elseif mode ==  2 then mode = "Level";	sound = "fm-lvl"
-    elseif mode ==  3 then mode = "Horizon";	sound = "fm-hrzn"
-    elseif mode ==  4 then mode = "AxisLck";	sound = "fm-axlk"
-    elseif mode ==  5 then mode = "VirtBar";	sound = "fm-vbar"
-    elseif mode ==  6 then mode = "Stabil1";	sound = "fm-stbl"
-    elseif mode ==  7 then mode = "Stabil2";	sound = "fm-stbl"
-    elseif mode ==  8 then mode = "Stabil3";	sound = "fm-stbl"
-    elseif mode ==  9 then mode = "Tune";	sound = "fm-tune";	style = style + BLINK
-    elseif mode == 10 then mode = "AltHold";	sound = "fm-ahld"
-    elseif mode == 11 then mode = "PosHold";	sound = "fm-phld"
-    elseif mode == 12 then mode = "RToHome";	sound = "fm-rth"
-    elseif mode == 13 then mode = "PathPln";	sound = "fm-plan"
-    elseif mode == 15 then mode = "Acro+";	sound = "fm-acr"
-    elseif mode == 16 then mode = "AcrDyn";	sound = "fm-acr"
-    elseif mode == 17 then mode = "Fail";	sound = "fm-fail";	style = style + BLINK
+    if     m ==  0 then mode = "Manual";	sound = "fm-manl"
+    elseif m ==  1 then mode = "Acro";		sound = "fm-acr"
+    elseif m ==  2 then mode = "Level";		sound = "fm-lvl"
+    elseif m ==  3 then mode = "Horizon";	sound = "fm-hrzn"
+    elseif m ==  4 then mode = "AxisLck";	sound = "fm-axlk"
+    elseif m ==  5 then mode = "VirtBar";	sound = "fm-vbar"
+    elseif m ==  6 then mode = "Stabil1";	sound = "fm-stbl"
+    elseif m ==  7 then mode = "Stabil2";	sound = "fm-stbl"
+    elseif m ==  8 then mode = "Stabil3";	sound = "fm-stbl"
+    elseif m ==  9 then mode = "Tune";		sound = "fm-tune";	style = style + BLINK
+    elseif m == 10 then mode = "AltHold";	sound = "fm-ahld"
+    elseif m == 11 then mode = "PosHold";	sound = "fm-phld"
+    elseif m == 12 then mode = "RToHome";	sound = "fm-rth"
+    elseif m == 13 then mode = "PathPln";	sound = "fm-plan"
+    elseif m == 15 then mode = "Acro+";		sound = "fm-acr"
+    elseif m == 16 then mode = "AcrDyn";	sound = "fm-acr"
+    elseif m == 17 then mode = "Fail";		sound = "fm-fail";	style = style + BLINK
     end
 
     lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
     lcd.drawText(x+20, y+4, mode, style)
-    playFile(sound)
+
+    if prevMode ~= m then
+    	prevMode = m
+	playFile(sound .. ".wav")
+    end
 
 end
 
@@ -212,7 +218,7 @@ local function gpsWidget(x,y)
     lcd.drawPixmap(x+13, y+3, satImg)
     lcd.drawNumber(x+19, y+1, sats, SMLSIZE)
 
- end
+end
 
 
 -- main logic  -----------------------------------------------------------------
@@ -223,23 +229,23 @@ local function run(event)
 
     local x = -1
     local y = -1
-    local c
+    local w
 
-    for col=1, #widgets, 1 do
+    for col=1, #widgets do
         if #widgets[col] == 1 then
-            c = widgetWidthSingle
+            w = widgetWidthSingle
         else
-            c = widgetWidthMulti
+            w = widgetWidthMulti
         end
 
-        for row=1, #widgets[col], 1 do
-            lcd.drawLine(x, y, x+c, y, SOLID, GREY_DEFAULT)
-            widget[widgets[col][row]](x+1, y+1)
+        for row=1, #widgets[col] do
+            lcd.drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
+            widget[widgets[col][row]](x+1, y+1)	--call widget
             y = y + math.floor(displayHeight / #widgets[col])
         end
 
         y = -1
-        x = x + c
+        x = x + w
     end
 
 end
@@ -259,7 +265,7 @@ local function init()
 
     local colsSingle = 0
     local colsMulti  = 0
-    for i=1, #widgets, 1 do
+    for i=1, #widgets do
         if #widgets[i] == 1 then
             colsSingle = colsSingle + 1
         else
