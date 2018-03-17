@@ -23,19 +23,32 @@ local widgets = {
                 }
 
 
--- globals  --------------------------------------------------------------------
+-- module globals  -------------------------------------------------------------
 
 local fuel		= 0
 local linq		= 0
 local prevMode		= 0
 local dispTime		= 0
 local prevTime		= 0
-local displayTimer	= 0
+local displayFrame	= 0
 local displayWidth	= 212
 local displayHeight	= 64
 local widgetWidthSingle	= 35
 local widgetWidthMulti	= 0
 local widget		= {}
+
+
+-- optimize  -------------------------------------------------------------------
+
+local drawLine = lcd.drawLine
+local drawNumber = lcd.drawNumber
+local drawPixmap = lcd.drawPixmap
+local drawRectangle = lcd.drawRectangle
+local drawFilledRectangle = lcd.drawFilledRectangle
+local drawText = lcd.drawText
+local drawTimer = lcd.drawTimer
+local getLastPos = lcd.getLastPos
+local getValue = getValue
 
 
 -- widget functions  -----------------------------------------------------------
@@ -52,8 +65,8 @@ end
 
 local function batteryWidget(x, y)
 
-    lcd.drawFilledRectangle(x+13, y+7, 5, 2, 0)
-    lcd.drawRectangle(x+10, y+9, 11, 40)
+    drawFilledRectangle(x+13, y+7, 5, 2, 0)
+    drawRectangle(x+10, y+9, 11, 40)
 
     local battVolt = 0
     local cellVolt = getValue("Cels")
@@ -63,10 +76,10 @@ local function batteryWidget(x, y)
 	    battVolt = battVolt + v
 	    battCells = battCells + 1
 	end
-    elseif type(cellVolt) == "number" then -- dRonin et al
-	battVolt = cellVolt
-    else
+    elseif cellVolt == 0 then
 	battVolt = getValue("VFAS")
+    else -- dRonin et al
+	battVolt = cellVolt
     end
 
     if battCells == 0 then
@@ -105,11 +118,11 @@ local function batteryWidget(x, y)
     local myPxHeight = math.floor(fuel * 0.37)
     local myPxY = 11 + 37 - myPxHeight
     if fuel > 0 then
-        lcd.drawFilledRectangle(x+11, myPxY, 9, myPxHeight, 0)
+        drawFilledRectangle(x+11, myPxY, 9, myPxHeight, 0)
     end
 
     for i=36, 1, -2 do
-        lcd.drawLine(x+12, y+10+i, x+18, y+10+i, SOLID, GREY_DEFAULT)
+        drawLine(x+12, y+10+i, x+18, y+10+i, SOLID, GREY_DEFAULT)
     end
 
     local style = LEFT
@@ -117,16 +130,14 @@ local function batteryWidget(x, y)
         style = style + BLINK
     end
 
-    if displayTimer == 0 then
-	lcd.drawText(x, y+54, battCells.."S ", style)
-	style = style + PREC2
-	lcd.drawNumber(lcd.getLastPos(), y+54, cellVolt*100, style)
-    elseif displayTimer == 1 then
-	style = style + PREC2
-	lcd.drawNumber(x+5, y+54, battVolt*100, style)
+    if displayFrame == 0 then
+	drawText(x, y+54, battCells.."S ", 0)
+	drawNumber(getLastPos(), y+54, cellVolt*100, style + PREC2)
+    elseif displayFrame == 1 then
+	drawNumber(x+5, y+54, battVolt*100, style + PREC2)
+	if highVolt then drawText(getLastPos(), y+54, "H", 0) end
     end
-    if highVolt then style = BLINK else style = 0 end
-    lcd.drawText(lcd.getLastPos(), y+54, "V", style)
+    drawText(getLastPos(), y+54, "V", 0)
 
 end
 
@@ -156,8 +167,8 @@ local function rssiWidget(x, y)
     elseif percent > 0  then pixmap = "/IMAGES/TELEM/RSSIh01.bmp"
     end
 
-    lcd.drawPixmap(x+4, y+1, pixmap)
-    lcd.drawText(x+6, y+54, linq .. "dB", 0)
+    drawPixmap(x+4, y+1, pixmap)
+    drawText(x+6, y+54, linq .. "dB", 0)
 
 end
 
@@ -166,9 +177,9 @@ local function distWidget(x, y)
 
     local dist = getValue("Dist")
 
-    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/dist.bmp")
-    lcd.drawNumber(x+18, y+7, dist, LEFT)
-    lcd.drawText(lcd.getLastPos(), y+7, "m", 0)
+    drawPixmap(x+1, y+2, "/IMAGES/TELEM/dist.bmp")
+    drawNumber(x+18, y+5, dist, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+7, "m", 0)
 
 end
 
@@ -177,9 +188,9 @@ local function altitudeWidget(x, y)
 
     local altitude = getValue(Altd)
 
-    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/hgt.bmp")
-    lcd.drawNumber(x+18, y+7, altitude, LEFT)
-    lcd.drawText(lcd.getLastPos(), y+7, "m", 0)
+    drawPixmap(x+1, y+2, "/IMAGES/TELEM/hgt.bmp")
+    drawNumber(x+18, y+5, altitude, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+7, "m", 0)
 
 end
 
@@ -188,9 +199,9 @@ local function speedWidget(x, y)
 
     local speed = getValue("GSpd") * 3.6
 
-    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/speed.bmp")
-    lcd.drawNumber(x+18, y+7, speed, LEFT)
-    lcd.drawText(lcd.getLastPos(), y+7, "kmh", 0)
+    drawPixmap(x+1, y+2, "/IMAGES/TELEM/speed.bmp")
+    drawNumber(x+20, y+5, speed, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+7, "kmh", 0)
 
 end
 
@@ -199,9 +210,9 @@ local function headingWidget(x, y)
 
     local heading = getValue("Hdg")
 
-    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/compass.bmp")
-    lcd.drawNumber(x+18, y+7, heading, LEFT)
-    lcd.drawText(lcd.getLastPos(), y+7, "dg", 0)
+    drawPixmap(x+1, y+2, "/IMAGES/TELEM/compass.bmp")
+    drawNumber(x+18, y+5, heading, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+7, "dg", 0)
 
 end
 
@@ -211,11 +222,8 @@ local function modeWidget(x, y)
     local style = MIDSIZE
     local sound = ""
     local mode = ""
-    local m = getValue("RPM")
-    local armed = math.floor(m * 0.01) == 1
+    local m = math.floor(getValue("RPM") % 100)
 
-    m = math.floor(m % 100)
-  
     if linq <= 20 and m == 0 then
 	mode = "No RX"
 	style = style + BLINK
@@ -238,8 +246,8 @@ local function modeWidget(x, y)
     elseif m == 17 then mode = "Fail";		sound = "fm-fail";	style = style + BLINK
     end
 
-    lcd.drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
-    lcd.drawText(x+20, y+4, mode, style)
+    drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
+    drawText(x+20, y+4, mode, style)
 
     if prevMode ~= m then
         prevMode = m
@@ -251,8 +259,18 @@ end
 
 local function timerWidget(x, y)
 
-    lcd.drawPixmap(x+1, y+3, "/IMAGES/TELEM/timer_1.bmp")
-    lcd.drawTimer(x+18, y+8, getValue(196), 0)
+    local style = MIDSIZE
+    local timer = model.getTimer(0)
+    if timer then
+	timer = timer.value
+    else
+	timer = 0
+    end
+    if timer < 0 then
+        style = style + INVERS
+    end
+    drawPixmap(x+1, y+3, "/IMAGES/TELEM/timer_1.bmp")
+    drawTimer(x+20, y+5, timer, style)
 
 end
 
@@ -277,9 +295,9 @@ local function gpsWidget(x,y)
     elseif sats > 0 then satImg = "/IMAGES/TELEM/gps_1.bmp"
     end
 
-    lcd.drawPixmap(x+1, y+1, fixImg)
-    lcd.drawPixmap(x+13, y+3, satImg)
-    lcd.drawNumber(x+19, y+1, sats, SMLSIZE)
+    drawPixmap(x+1, y+1, fixImg)
+    drawPixmap(x+13, y+3, satImg)
+    drawNumber(x+19, y+1, sats, SMLSIZE)
 
 end
 
@@ -302,7 +320,7 @@ local function run(event)
         end
 
         for row=1, #widgets[col] do
-            lcd.drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
+            drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
             widget[widgets[col][row]](x+1, y+1) --call widget
             y = y + math.floor(displayHeight / #widgets[col])
         end
@@ -313,10 +331,10 @@ local function run(event)
 
     dispTime = dispTime + (getTime() - prevTime)
     if dispTime >= 200 then -- 2s
-	if displayTimer == 1 then 
-	    displayTimer = 0 
+	if displayFrame == 1 then 
+	    displayFrame = 0 
 	else 
-	    displayTimer = 1
+	    displayFrame = 1
 	end
 	dispTime = 0
     end
