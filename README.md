@@ -10,22 +10,25 @@ by Ollicious. It does not offer the same degree of customizability, as it
 only provides a subset of the original widgets.
 
 ## Features
-* Automatic detection of 1S, 2S, 3S, 4S, 6S or 8S LiPo, but not 5S nor 7S
-* Automatic selection of voltage sorce among FrSky **FLVSS**, **Cels** or **VFAS**
-* Automatic selection between Crossfire **RQly** or **RSSI** 
+* Automatic detection of **1S**, **2S**, **3S**, **4S**, **6S** or **8S** LiPo,
+  but not **5S** nor **7S**
+* Automatic selection of voltage sorce among _FrSky_ `FLVSS`, `Cels` or `VFAS`
+* Automatic selection between _Crossfire_ `RQly` or `RSSI` 
 * Automatic Flight Mode detection for [dRonin](http://dRonin.org)
-* ![ScreenShot](screenshot.gif)
+
+> ![ScreenShot](screenshot.gif)
 
 ## Usage
 * edit constants in the `settings` section to meet your needs
-* copy _/IMAGES/_ and _/SCRIPTS/_ folders to the same folders on the Taranis
+* copy `/IMAGES/` and `/SCRIPTS/` folders to the same folders on the Taranis
   SD card
-* select Script _Telem_ for one of the Screens on the Display page of your
-  OpenTX model
-* ![ScreenScript](screenscript.gif)
+* select _Script_ **Telem** for one of the _Screens_ on the _Display_ page of your
+  _OpenTX model_
+
+> ![ScreenScript](screenscript.gif)
 
 ## Contributing
-Pull requests for improvements on this basic functionality are always welcome.
+Pull requests for improvements on basic functionality are always welcome.
 
 ## License
 This work is published under the terms of the MIT License, see file `LICENSE`.
