@@ -12,9 +12,9 @@
 
 -- settings  -------------------------------------------------------------------
 
-local Altd = "GAlt"	-- "Alt" for barometric or "GAlt" GPS altitude
-local battCells = 0	-- 5=5S, 7=7S or 0=Autodetect 1S, 2S, 3S, 4S, 6S or 8S
-local cellMinV = 3.30	-- minimum voltage alert threshold
+local Altd	= "GAlt" -- "Alt" for barometric or "GAlt" GPS altitude
+local battCells	= 0	-- 5=5S, 7=7S or 0=Autodetect 1S, 2S, 3S, 4S, 6S or 8S
+local cellMinV	= 3.30	-- minimum voltage alert threshold
 local widgets = {
                   {"battery"},
                   {"gps", "dist", "alt"},
@@ -65,8 +65,8 @@ end
 
 local function batteryWidget(x, y)
 
-    drawFilledRectangle(x+13, y+7, 5, 2, 0)
-    drawRectangle(x+10, y+9, 11, 40)
+    drawFilledRectangle(x+13, y+9, 5, 2, 0)
+    drawRectangle(x+10, y+11, 11, 40)
 
     local battVolt = 0
     local cellVolt = getValue("Cels")
@@ -109,32 +109,39 @@ local function batteryWidget(x, y)
     elseif v > 3.67 and v < 4	then v = 212.53 * v - 765.29
     end
 
+    if linq <= 20 and prevMode == 0 then
+        fuel = 0
+    end
+
     if fuel == 0 then 
 	fuel = round(v) --init percent
     else 
 	fuel = round(fuel * 0.98 + 0.02 * v)
     end
 
+    drawNumber(x+10, y, fuel, SMLSIZE)
+    drawText(getLastPos(), y, "%", SMLSIZE)
+
     local myPxHeight = math.floor(fuel * 0.37)
-    local myPxY = 11 + 37 - myPxHeight
+    local myPxY = 13 + 37 - myPxHeight
     if fuel > 0 then
         drawFilledRectangle(x+11, myPxY, 9, myPxHeight, 0)
     end
 
     for i=36, 1, -2 do
-        drawLine(x+12, y+10+i, x+18, y+10+i, SOLID, GREY_DEFAULT)
+        drawLine(x+12, y+12+i, x+18, y+12+i, SOLID, GREY_DEFAULT)
     end
 
-    local style = LEFT
+    local style = LEFT + PREC2
     if cellVolt < cellMinV then
         style = style + BLINK
     end
 
     if displayFrame == 0 then
 	drawText(x, y+54, battCells.."S ", 0)
-	drawNumber(getLastPos(), y+54, cellVolt*100, style + PREC2)
+	drawNumber(getLastPos(), y+54, cellVolt*100, style)
     elseif displayFrame == 1 then
-	drawNumber(x+5, y+54, battVolt*100, style + PREC2)
+	drawNumber(x+5, y+54, battVolt*100, style)
 	if highVolt then drawText(getLastPos(), y+54, "H", 0) end
     end
     drawText(getLastPos(), y+54, "V", 0)
@@ -167,13 +174,10 @@ local function rssiWidget(x, y)
     elseif percent >  0 then pixmap = "/IMAGES/TELEM/RSSIh01.bmp"
     end
 
-    drawPixmap(x+4, y+1, pixmap)
-    if displayFrame == 0 then
-	drawText(x+6, y+54, linq .. "dB", 0)
-    elseif displayFrame == 1 then
-	drawNumber(x+6, y+54, percent*10, PREC1)
-	drawText(getLastPos(), y+54, "%", 0)
-    end
+    drawPixmap(x+4, y+3, pixmap)
+    drawNumber(x+6, y, percent*10, PREC1)
+    drawText(getLastPos(), y, "%", 0)
+    drawText(x+6, y+54, linq .. "dB", 0)
 
 end
 
@@ -183,8 +187,8 @@ local function distWidget(x, y)
     local dist = getValue("Dist")
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/dist.bmp")
-    drawNumber(x+18, y+5, dist, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+7, "m", 0)
+    drawNumber(x+21, y+5, dist, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+8, "m", 0)
 
 end
 
@@ -194,8 +198,8 @@ local function altitudeWidget(x, y)
     local altitude = getValue(Altd)
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/hgt.bmp")
-    drawNumber(x+18, y+5, altitude, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+7, "m", 0)
+    drawNumber(x+21, y+5, altitude, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+8, "m", 0)
 
 end
 
@@ -205,8 +209,8 @@ local function speedWidget(x, y)
     local speed = getValue("GSpd") * 3.6
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/speed.bmp")
-    drawNumber(x+20, y+5, speed, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+7, "kmh", 0)
+    drawNumber(x+21, y+5, speed, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+8, "kmh", 0)
 
 end
 
@@ -216,8 +220,8 @@ local function headingWidget(x, y)
     local heading = getValue("Hdg")
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/compass.bmp")
-    drawNumber(x+18, y+5, heading, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+7, "dg", 0)
+    drawNumber(x+21, y+5, heading, MIDSIZE + LEFT)
+    drawText(getLastPos(), y+8, "dg", 0)
 
 end
 
@@ -252,7 +256,7 @@ local function modeWidget(x, y)
     end
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
-    drawText(x+20, y+4, mode, style)
+    drawText(x+19, y+4, mode, style)
 
     if prevMode ~= m then
         prevMode = m
@@ -275,7 +279,7 @@ local function timerWidget(x, y)
         style = style + INVERS
     end
     drawPixmap(x+1, y+3, "/IMAGES/TELEM/timer_1.bmp")
-    drawTimer(x+20, y+5, timer, style)
+    drawTimer(x+21, y+5, timer, style)
 
 end
 
