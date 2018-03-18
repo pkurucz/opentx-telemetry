@@ -14,7 +14,7 @@ only provides a subset of the original widgets.
 * Automatic detection of 1S, 2S, 3S, 4S, 6S or 8S LiPo, but not 5S nor 7S
 * Automatic selection of voltage sorce among FrSky **FLVSS**, **Cels** or **VFAS**
 * Automatic selection between Crossfire **RQly** or **RSSI** 
-  ![ScreenShot](screenshot.gif)
+* ![ScreenShot](screenshot.gif)
 
 ## Usage
 * edit constants in the `settings` section to meet your needs
@@ -22,7 +22,7 @@ only provides a subset of the original widgets.
   SD card
 * select Script _Telem_ for one of the Screens on the Display page of your
   OpenTX model
-  ![ScreenScript](screenscript.gif)
+* ![ScreenScript](screenscript.gif)
 
 ## Contributing
 Pull requests for improvements on this basic functionality are always welcome.
