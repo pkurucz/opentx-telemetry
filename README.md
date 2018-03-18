@@ -10,10 +10,10 @@ by Ollicious. It does not offer the same degree of customizability, as it
 only provides a subset of the original widgets.
 
 ## Features
-* Automatic Flight Mode detection for [dRonin](http://dRonin.org)
 * Automatic detection of 1S, 2S, 3S, 4S, 6S or 8S LiPo, but not 5S nor 7S
 * Automatic selection of voltage sorce among FrSky **FLVSS**, **Cels** or **VFAS**
 * Automatic selection between Crossfire **RQly** or **RSSI** 
+* Automatic Flight Mode detection for [dRonin](http://dRonin.org)
 * ![ScreenShot](screenshot.gif)
 
 ## Usage
