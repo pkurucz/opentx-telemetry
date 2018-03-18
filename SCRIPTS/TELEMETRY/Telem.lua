@@ -15,7 +15,7 @@
 local Altd	= "GAlt" -- "Alt" for barometric or "GAlt" GPS altitude
 local battCells	= 0	-- 5=5S, 7=7S or 0=Autodetect 1S, 2S, 3S, 4S, 6S or 8S
 local cellMinV	= 3.30	-- minimum voltage alert threshold
-local widgets = {
+local widgets = {	-- screen layout
                   {"battery"},
                   {"gps", "dist", "alt"},
                   {"mode", "speed", "timer"},
@@ -36,7 +36,26 @@ local displayHeight	= 64
 local widgetWidthSingle	= 35
 local widgetWidthMulti	= 0
 local widget		= {}
+local flightMode	= {}
 
+flightMode[-1] = {name = "No RX",	sound = "",		style = BLINK}
+flightMode[ 0] = {name = "Manual",	sound = "fm-mnl",	style = 0}
+flightMode[ 1] = {name = "Acro",	sound = "fm-acr",	style = 0}
+flightMode[ 2] = {name = "Level",	sound = "fm-lvl",	style = 0}
+flightMode[ 3] = {name = "Horizon",	sound = "fm-hrzn",	style = 0}
+flightMode[ 4] = {name = "AxisLck",	sound = "fm-axlk",	style = 0}
+flightMode[ 5] = {name = "VirtBar",	sound = "fm-vbar",	style = 0}
+flightMode[ 6] = {name = "Stabil1",	sound = "fm-stb1",	style = 0}
+flightMode[ 7] = {name = "Stabil2",	sound = "fm-stb2",	style = 0}
+flightMode[ 8] = {name = "Stabil3",	sound = "fm-stb3",	style = 0}
+flightMode[ 9] = {name = "Autotune",	sound = "fm-tune",	style = BLINK}
+flightMode[10] = {name = "AltHold",	sound = "fm-ahld",	style = 0}
+flightMode[11] = {name = "PosHold",	sound = "fm-phld",	style = 0}
+flightMode[12] = {name = "RToHome",	sound = "fm-rth",	style = 0}
+flightMode[13] = {name = "PathPln",	sound = "fm-plan",	style = 0}
+flightMode[15] = {name = "Acro+",	sound = "fm-acrp",	style = 0}
+flightMode[16] = {name = "AcroDyn",	sound = "fm-acrd",	style = 0}
+flightMode[17] = {name = "Failsafe",	sound = "fm-fail",	style = BLINK}
 
 -- optimize  -------------------------------------------------------------------
 
@@ -109,9 +128,7 @@ local function batteryWidget(x, y)
     elseif v > 3.67 and v < 4	then v = 212.53 * v - 765.29
     end
 
-    if linq <= 20 and prevMode == 0 then
-        fuel = 0
-    end
+    if linq <= 20 and prevMode == 0 then fuel = 0 end -- No RX
 
     if fuel == 0 then 
 	fuel = round(v) --init percent
@@ -228,39 +245,16 @@ end
 
 local function modeWidget(x, y)
 
-    local style = MIDSIZE
-    local sound = ""
-    local mode = ""
     local m = math.floor(getValue("RPM") % 100)
 
-    if linq <= 20 and m == 0 then
-	mode = "No RX"
-	style = style + BLINK
-    elseif m ==  0 then mode = "Manual";	sound = "fm-mnl"
-    elseif m ==  1 then mode = "Acro";		sound = "fm-acr"
-    elseif m ==  2 then mode = "Level";		sound = "fm-lvl"
-    elseif m ==  3 then mode = "Horizon";	sound = "fm-hrzn"
-    elseif m ==  4 then mode = "AxisLck";	sound = "fm-axlk"
-    elseif m ==  5 then mode = "VirtBar";	sound = "fm-vbar"
-    elseif m ==  6 then mode = "Stabil1";	sound = "fm-stb1"
-    elseif m ==  7 then mode = "Stabil2";	sound = "fm-stb2"
-    elseif m ==  8 then mode = "Stabil3";	sound = "fm-stb3"
-    elseif m ==  9 then mode = "Tune";		sound = "fm-tune";	style = style + BLINK
-    elseif m == 10 then mode = "AltHold";	sound = "fm-ahld"
-    elseif m == 11 then mode = "PosHold";	sound = "fm-phld"
-    elseif m == 12 then mode = "RToHome";	sound = "fm-rth"
-    elseif m == 13 then mode = "PathPln";	sound = "fm-plan"
-    elseif m == 15 then mode = "Acro+";		sound = "fm-acrp"
-    elseif m == 16 then mode = "AcrDyn";	sound = "fm-acrd"
-    elseif m == 17 then mode = "Fail";		sound = "fm-fail";	style = style + BLINK
-    end
+    if linq <= 20 and m == 0 then m = -1 end -- No RX
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
-    drawText(x+19, y+4, mode, style)
+    drawText(x+19, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
 
     if prevMode ~= m then
         prevMode = m
-        playFile(sound .. ".wav")
+        playFile(flightMode[m].sound .. ".wav")
     end
 
 end
