@@ -13,7 +13,7 @@
 -- settings  -------------------------------------------------------------------
 
 local Altd	= "GAlt" -- "Alt" for barometric or "GAlt" GPS altitude
-local battCells	= 0	-- 5=5S, 7=7S or 0=Autodetect 1S, 2S, 3S, 4S, 6S or 8S
+local battCells	= 0	-- 5=5S or 7=7S or autodetect 1S, 2S, 3S, 4S, 6S or 8S
 local cellMinV	= 3.30	-- minimum voltage alert threshold
 local widgets = {	-- screen layout
                   {"battery"},
@@ -54,7 +54,7 @@ flightMode[11] = {name = "PosHold",	sound = "fm-phld",	style = 0}
 flightMode[12] = {name = "RToHome",	sound = "fm-rth",	style = 0}
 flightMode[13] = {name = "PathPln",	sound = "fm-plan",	style = 0}
 flightMode[15] = {name = "Acro+",	sound = "fm-acrp",	style = 0}
-flightMode[16] = {name = "AcroDyn",	sound = "fm-acrd",	style = 0}
+flightMode[16] = {name = "AcroDyne",	sound = "fm-acrd",	style = 0}
 flightMode[17] = {name = "Failsafe",	sound = "fm-fail",	style = BLINK}
 
 -- optimize  -------------------------------------------------------------------
@@ -101,9 +101,9 @@ local function batteryWidget(x, y)
 	battVolt = cellVolt
     end
 
-    if battCells == 0 then
-        if math.ceil(battVolt / 4.37 ) > battCells and battVolt < 4.37 * 8 then 
-            battCells = math.ceil(battVolt / 4.37) -- no autodetect for 5S & 7S
+    if battCells ~= 5 or battCells ~= 7 then -- no autodetect for 5S & 7S
+        if math.ceil(battVolt / 4.37) > battCells and battVolt < 4.37 * 8 then 
+            battCells = math.ceil(battVolt / 4.37)
             if battCells == 7 then battCells = 8 end -- empty 8S looks like 7S
             if battCells == 5 then battCells = 6 end -- empty 6S looks like 5S
         end
@@ -250,7 +250,7 @@ local function modeWidget(x, y)
     if linq <= 20 and m == 0 then m = -1 end -- No Telemetry
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
-    drawText(x+19, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
+    drawText(x+18, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
 
     if prevMode ~= m and flightMode[m].sound then
         prevMode = m
@@ -334,10 +334,10 @@ local function run(event)
 
     dispTime = dispTime + (getTime() - prevTime)
     if dispTime >= 200 then -- 2s
-	if displayFrame == 1 then 
-	    displayFrame = 0 
+	if displayFrame == 0 then 
+	    displayFrame = 1 
 	else 
-	    displayFrame = 1
+	    displayFrame = 0
 	end
 	dispTime = 0
     end
