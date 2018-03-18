@@ -12,7 +12,7 @@ only provides a subset of the original widgets.
 ## Features
 * Automatic detection of **1S**, **2S**, **3S**, **4S**, **6S** or **8S** LiPo,
   but not **5S** nor **7S**
-* Automatic selection of voltage sorce among _FrSky_ `FLVSS`, `Cels` or `VFAS`
+* Automatic selection of voltage source among _FrSky_ `FLVSS`, `Cels` or `VFAS`
 * Automatic selection between _Crossfire_ `RQly` or `RSSI` 
 * Automatic Flight Mode detection for [dRonin](http://dRonin.org)
 
