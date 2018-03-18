@@ -38,7 +38,7 @@ local widgetWidthMulti	= 0
 local widget		= {}
 local flightMode	= {}
 
-flightMode[-1] = {name = "No RX",	sound = "",		style = BLINK}
+flightMode[-1] = {name = "NoTelem",				style = BLINK}
 flightMode[ 0] = {name = "Manual",	sound = "fm-mnl",	style = 0}
 flightMode[ 1] = {name = "Acro",	sound = "fm-acr",	style = 0}
 flightMode[ 2] = {name = "Level",	sound = "fm-lvl",	style = 0}
@@ -128,7 +128,7 @@ local function batteryWidget(x, y)
     elseif v > 3.67 and v < 4	then v = 212.53 * v - 765.29
     end
 
-    if linq <= 20 and prevMode == 0 then fuel = 0 end -- No RX
+    if linq <= 20 and prevMode == 0 then fuel = 0 end -- No Telemetry
 
     if fuel == 0 then 
 	fuel = round(v) --init percent
@@ -247,12 +247,12 @@ local function modeWidget(x, y)
 
     local m = math.floor(getValue("RPM") % 100)
 
-    if linq <= 20 and m == 0 then m = -1 end -- No RX
+    if linq <= 20 and m == 0 then m = -1 end -- No Telemetry
 
     drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
     drawText(x+19, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
 
-    if prevMode ~= m then
+    if prevMode ~= m and flightMode[m].sound then
         prevMode = m
         playFile(flightMode[m].sound .. ".wav")
     end
