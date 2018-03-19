@@ -85,9 +85,6 @@ end
 
 local function batteryWidget(x, y)
 
-    drawFilledRectangle(x+13, y+9, 5, 2, 0)
-    drawRectangle(x+10, y+11, 11, 40)
-
     local battVolt = 0
     local cellVolt = getValue('Cels')
     if type(cellVolt) == 'table' then -- FrSky FLVSS
@@ -122,11 +119,11 @@ local function batteryWidget(x, y)
 	v = cellVolt
     end
 
-    if     v > 4.2		then v = 100
-    elseif v < 3.2		then v = 0
+    if     v >  4.2		then v = 100
+    elseif v <  3.2		then v = 0
     elseif v >= 4		then v = 80 * v - 236
     elseif v <= 3.67		then v = 29.787234 * v - 95.319149 
-    elseif v > 3.67 and v < 4	then v = 212.53 * v - 765.29
+    elseif v >  3.67 and v < 4	then v = 212.53 * v - 765.29
     end
 
     if linq <= 20 and prevMode == 0 then fuel = 0 end -- No Telemetry
@@ -139,6 +136,9 @@ local function batteryWidget(x, y)
 
     drawNumber(x+10, y, fuel, SMLSIZE)
     drawText(getLastPos(), y, '%', SMLSIZE)
+
+    drawFilledRectangle(x+13, y+9, 5, 2, 0)
+    drawRectangle(x+10, y+11, 11, 40)
 
     local myPxHeight = math.floor(fuel * 0.37)
     local myPxY = 13 + 37 - myPxHeight
