@@ -16,10 +16,10 @@ local Altd	= "GAlt" -- "Alt" for barometric or "GAlt" GPS altitude
 local battCells	= 0	-- 5=5S or 7=7S or autodetect 1S, 2S, 3S, 4S, 6S or 8S
 local cellMinV	= 3.30	-- minimum voltage alert threshold
 local widgets = {	-- screen layout
-                  {"battery"},
-                  {"gps", "dist", "alt"},
-                  {"mode", "speed", "timer"},
-                  {"rssi"}
+                  { "battery" },
+                  { "gps", "dist", "alt" },
+                  { "mode", "speed", "timer" },
+                  { "rssi" },
                 }
 
 
@@ -38,24 +38,24 @@ local widgetWidthMulti	= 0
 local widget		= {}
 local flightMode	= {}
 
-flightMode[-1] = {name = "NoTelem",				style = BLINK}
-flightMode[ 0] = {name = "Manual",	sound = "fm-mnl",	style = 0}
-flightMode[ 1] = {name = "Acro",	sound = "fm-acr",	style = 0}
-flightMode[ 2] = {name = "Level",	sound = "fm-lvl",	style = 0}
-flightMode[ 3] = {name = "Horizon",	sound = "fm-hrzn",	style = 0}
-flightMode[ 4] = {name = "AxisLck",	sound = "fm-axlk",	style = 0}
-flightMode[ 5] = {name = "VirtBar",	sound = "fm-vbar",	style = 0}
-flightMode[ 6] = {name = "Stabil1",	sound = "fm-stb1",	style = 0}
-flightMode[ 7] = {name = "Stabil2",	sound = "fm-stb2",	style = 0}
-flightMode[ 8] = {name = "Stabil3",	sound = "fm-stb3",	style = 0}
-flightMode[ 9] = {name = "Autotune",	sound = "fm-tune",	style = BLINK}
-flightMode[10] = {name = "AltHold",	sound = "fm-ahld",	style = 0}
-flightMode[11] = {name = "PosHold",	sound = "fm-phld",	style = 0}
-flightMode[12] = {name = "RToHome",	sound = "fm-rth",	style = 0}
-flightMode[13] = {name = "PathPln",	sound = "fm-plan",	style = 0}
-flightMode[15] = {name = "Acro+",	sound = "fm-acrp",	style = 0}
-flightMode[16] = {name = "AcroDyne",	sound = "fm-acrd",	style = 0}
-flightMode[17] = {name = "Failsafe",	sound = "fm-fail",	style = BLINK}
+flightMode[-1] = { name = "NoTelem",				style = BLINK }
+flightMode[ 0] = { name = "Manual",	sound = "fm-mnl",	style = 0 }
+flightMode[ 1] = { name = "Acro",	sound = "fm-acr",	style = 0 }
+flightMode[ 2] = { name = "Level",	sound = "fm-lvl",	style = 0 }
+flightMode[ 3] = { name = "Horizon",	sound = "fm-hrzn",	style = 0 }
+flightMode[ 4] = { name = "AxisLck",	sound = "fm-axlk",	style = 0 }
+flightMode[ 5] = { name = "VirtBar",	sound = "fm-vbar",	style = 0 }
+flightMode[ 6] = { name = "Stabil1",	sound = "fm-stb1",	style = 0 }
+flightMode[ 7] = { name = "Stabil2",	sound = "fm-stb2",	style = 0 }
+flightMode[ 8] = { name = "Stabil3",	sound = "fm-stb3",	style = 0 }
+flightMode[ 9] = { name = "Autotune",	sound = "fm-tune",	style = BLINK }
+flightMode[10] = { name = "AltHold",	sound = "fm-ahld",	style = 0 }
+flightMode[11] = { name = "PosHold",	sound = "fm-phld",	style = 0 }
+flightMode[12] = { name = "RToHome",	sound = "fm-rth",	style = 0 }
+flightMode[13] = { name = "PathPln",	sound = "fm-plan",	style = 0 }
+flightMode[15] = { name = "Acro+",	sound = "fm-acrp",	style = 0 }
+flightMode[16] = { name = "AcroDyne",	sound = "fm-acrd",	style = 0 }
+flightMode[17] = { name = "FailSafe",	sound = "fm-fail",	style = BLINK }
 
 -- optimize  -------------------------------------------------------------------
 

@@ -14,7 +14,7 @@ only provides a subset of the original widgets.
   _LiPo_ or _LiHV_, but not **5S** nor **7S**
 * Automatic selection of voltage source among _FrSky_ `FLVSS`, `Cels` or `VFAS`
 * Automatic selection between _Crossfire_ `RQly` or `RSSI` 
-* Automatic Flight Mode detection for [dRonin](http://dRonin.org)
+* Automatic Flight Mode detection from [dRonin](http://dRonin.org)
 
 > ![ScreenShot](screenshot.gif)
 
