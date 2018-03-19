@@ -12,15 +12,15 @@
 
 -- settings  -------------------------------------------------------------------
 
-local Altd	= "GAlt" -- "Alt" for barometric or "GAlt" GPS altitude
+local Altd	= 'GAlt' -- 'Alt' for barometric or 'GAlt' GPS altitude
 local battCells	= 0	-- 5=5S or 7=7S or autodetect 1S, 2S, 3S, 4S, 6S or 8S
 local cellMinV	= 3.30	-- minimum voltage alert threshold
-local widgets = {	-- screen layout
-                  { "battery" },
-                  { "gps", "dist", "alt" },
-                  { "mode", "speed", "timer" },
-                  { "rssi" },
-                }
+local layout	= {	-- screen widgets
+                    { 'battery' },
+                    { 'gps', 'dist', 'alt' },
+                    { 'mode', 'speed', 'timer' },
+                    { 'rssi' },
+                  }
 
 
 -- module globals  -------------------------------------------------------------
@@ -38,24 +38,25 @@ local widgetWidthMulti	= 0
 local widget		= {}
 local flightMode	= {}
 
-flightMode[-1] = { name = "NoTelem",				style = BLINK }
-flightMode[ 0] = { name = "Manual",	sound = "fm-mnl",	style = 0 }
-flightMode[ 1] = { name = "Acro",	sound = "fm-acr",	style = 0 }
-flightMode[ 2] = { name = "Level",	sound = "fm-lvl",	style = 0 }
-flightMode[ 3] = { name = "Horizon",	sound = "fm-hrzn",	style = 0 }
-flightMode[ 4] = { name = "AxisLck",	sound = "fm-axlk",	style = 0 }
-flightMode[ 5] = { name = "VirtBar",	sound = "fm-vbar",	style = 0 }
-flightMode[ 6] = { name = "Stabil1",	sound = "fm-stb1",	style = 0 }
-flightMode[ 7] = { name = "Stabil2",	sound = "fm-stb2",	style = 0 }
-flightMode[ 8] = { name = "Stabil3",	sound = "fm-stb3",	style = 0 }
-flightMode[ 9] = { name = "Autotune",	sound = "fm-tune",	style = BLINK }
-flightMode[10] = { name = "AltHold",	sound = "fm-ahld",	style = 0 }
-flightMode[11] = { name = "PosHold",	sound = "fm-phld",	style = 0 }
-flightMode[12] = { name = "RToHome",	sound = "fm-rth",	style = 0 }
-flightMode[13] = { name = "PathPln",	sound = "fm-plan",	style = 0 }
-flightMode[15] = { name = "Acro+",	sound = "fm-acrp",	style = 0 }
-flightMode[16] = { name = "AcroDyne",	sound = "fm-acrd",	style = 0 }
-flightMode[17] = { name = "FailSafe",	sound = "fm-fail",	style = BLINK }
+flightMode[-1] = { name = 'NoTelem',				style = BLINK }
+flightMode[ 0] = { name = 'Manual',	sound = 'fm-mnl',	style = 0 }
+flightMode[ 1] = { name = 'Acro',	sound = 'fm-acr',	style = 0 }
+flightMode[ 2] = { name = 'Level',	sound = 'fm-lvl',	style = 0 }
+flightMode[ 3] = { name = 'Horizon',	sound = 'fm-hrzn',	style = 0 }
+flightMode[ 4] = { name = 'AxisLck',	sound = 'fm-axlk',	style = 0 }
+flightMode[ 5] = { name = 'VirtBar',	sound = 'fm-vbar',	style = 0 }
+flightMode[ 6] = { name = 'Stabil1',	sound = 'fm-stb1',	style = 0 }
+flightMode[ 7] = { name = 'Stabil2',	sound = 'fm-stb2',	style = 0 }
+flightMode[ 8] = { name = 'Stabil3',	sound = 'fm-stb3',	style = 0 }
+flightMode[ 9] = { name = 'Autotune',	sound = 'fm-tune',	style = BLINK }
+flightMode[10] = { name = 'AltHold',	sound = 'fm-ahld',	style = 0 }
+flightMode[11] = { name = 'PosHold',	sound = 'fm-phld',	style = 0 }
+flightMode[12] = { name = 'RToHome',	sound = 'fm-rth',	style = 0 }
+flightMode[13] = { name = 'PathPln',	sound = 'fm-plan',	style = 0 }
+flightMode[15] = { name = 'Acro+',	sound = 'fm-acrp',	style = 0 }
+flightMode[16] = { name = 'AcroDyne',	sound = 'fm-acrd',	style = 0 }
+flightMode[17] = { name = 'FailSafe',	sound = 'fm-fail',	style = BLINK }
+
 
 -- optimize  -------------------------------------------------------------------
 
@@ -88,15 +89,15 @@ local function batteryWidget(x, y)
     drawRectangle(x+10, y+11, 11, 40)
 
     local battVolt = 0
-    local cellVolt = getValue("Cels")
-    if type(cellVolt) == "table" then -- FrSky FLVSS
+    local cellVolt = getValue('Cels')
+    if type(cellVolt) == 'table' then -- FrSky FLVSS
 	battCells = 0
 	for i, v in ipairs(cellVolt) do
 	    battVolt = battVolt + v
 	    battCells = battCells + 1
 	end
     elseif cellVolt == 0 then
-	battVolt = getValue("VFAS")
+	battVolt = getValue('VFAS')
     else -- dRonin et al
 	battVolt = cellVolt
     end
@@ -137,7 +138,7 @@ local function batteryWidget(x, y)
     end
 
     drawNumber(x+10, y, fuel, SMLSIZE)
-    drawText(getLastPos(), y, "%", SMLSIZE)
+    drawText(getLastPos(), y, '%', SMLSIZE)
 
     local myPxHeight = math.floor(fuel * 0.37)
     local myPxY = 13 + 37 - myPxHeight
@@ -155,22 +156,22 @@ local function batteryWidget(x, y)
     end
 
     if displayFrame == 0 then
-	drawText(x, y+54, battCells.."S ", 0)
+	drawText(x, y+54, battCells..'S ', 0)
 	drawNumber(getLastPos(), y+54, cellVolt*100, style)
     elseif displayFrame == 1 then
 	drawNumber(x+5, y+54, battVolt*100, style)
-	if highVolt then drawText(getLastPos(), y+54, "H", 0) end
+	if highVolt then drawText(getLastPos(), y+54, 'H', 0) end
     end
-    drawText(getLastPos(), y+54, "V", 0)
+    drawText(getLastPos(), y+54, 'V', 0)
 
 end
 
 
 local function rssiWidget(x, y)
 
-    linq = getValue("RQly")	-- Crossfire Rx Link Quality
+    linq = getValue('RQly')	-- Crossfire Rx Link Quality
     if linq == 0 then
-	linq = getValue("RSSI")	-- FrSky et al
+	linq = getValue('RSSI')	-- FrSky et al
     end
         
     local percent = 0
@@ -178,34 +179,34 @@ local function rssiWidget(x, y)
         percent = (math.log(linq-28, 10) - 1) / (math.log(72, 10) - 1) * 100
     end
 
-    local pixmap = "/IMAGES/TELEM/RSSIh00.bmp"
-    if     percent > 90 then pixmap = "/IMAGES/TELEM/RSSIh10.bmp"
-    elseif percent > 80 then pixmap = "/IMAGES/TELEM/RSSIh09.bmp"
-    elseif percent > 70 then pixmap = "/IMAGES/TELEM/RSSIh08.bmp"
-    elseif percent > 60 then pixmap = "/IMAGES/TELEM/RSSIh07.bmp"
-    elseif percent > 50 then pixmap = "/IMAGES/TELEM/RSSIh06.bmp"
-    elseif percent > 40 then pixmap = "/IMAGES/TELEM/RSSIh05.bmp"
-    elseif percent > 30 then pixmap = "/IMAGES/TELEM/RSSIh04.bmp"
-    elseif percent > 20 then pixmap = "/IMAGES/TELEM/RSSIh03.bmp"
-    elseif percent > 10 then pixmap = "/IMAGES/TELEM/RSSIh02.bmp"
-    elseif percent >  0 then pixmap = "/IMAGES/TELEM/RSSIh01.bmp"
+    local pixmap = '/IMAGES/TELEM/RSSIh00.bmp'
+    if     percent > 90 then pixmap = '/IMAGES/TELEM/RSSIh10.bmp'
+    elseif percent > 80 then pixmap = '/IMAGES/TELEM/RSSIh09.bmp'
+    elseif percent > 70 then pixmap = '/IMAGES/TELEM/RSSIh08.bmp'
+    elseif percent > 60 then pixmap = '/IMAGES/TELEM/RSSIh07.bmp'
+    elseif percent > 50 then pixmap = '/IMAGES/TELEM/RSSIh06.bmp'
+    elseif percent > 40 then pixmap = '/IMAGES/TELEM/RSSIh05.bmp'
+    elseif percent > 30 then pixmap = '/IMAGES/TELEM/RSSIh04.bmp'
+    elseif percent > 20 then pixmap = '/IMAGES/TELEM/RSSIh03.bmp'
+    elseif percent > 10 then pixmap = '/IMAGES/TELEM/RSSIh02.bmp'
+    elseif percent >  0 then pixmap = '/IMAGES/TELEM/RSSIh01.bmp'
     end
 
     drawPixmap(x+4, y+3, pixmap)
     drawNumber(x+6, y, percent*10, PREC1)
-    drawText(getLastPos(), y, "%", 0)
-    drawText(x+6, y+54, linq .. "dB", 0)
+    drawText(getLastPos(), y, '%', 0)
+    drawText(x+6, y+54, linq .. 'dB', 0)
 
 end
 
 
 local function distWidget(x, y)
 
-    local dist = getValue("Dist")
+    local dist = getValue('Dist')
 
-    drawPixmap(x+1, y+2, "/IMAGES/TELEM/dist.bmp")
+    drawPixmap(x+1, y+2, '/IMAGES/TELEM/dist.bmp')
     drawNumber(x+21, y+5, dist, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, "m", 0)
+    drawText(getLastPos(), y+8, 'm', 0)
 
 end
 
@@ -214,47 +215,47 @@ local function altitudeWidget(x, y)
 
     local altitude = getValue(Altd)
 
-    drawPixmap(x+1, y+2, "/IMAGES/TELEM/hgt.bmp")
+    drawPixmap(x+1, y+2, '/IMAGES/TELEM/hgt.bmp')
     drawNumber(x+21, y+5, altitude, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, "m", 0)
+    drawText(getLastPos(), y+8, 'm', 0)
 
 end
 
 
 local function speedWidget(x, y)
 
-    local speed = getValue("GSpd") * 3.6
+    local speed = getValue('GSpd') * 3.6
 
-    drawPixmap(x+1, y+2, "/IMAGES/TELEM/speed.bmp")
+    drawPixmap(x+1, y+2, '/IMAGES/TELEM/speed.bmp')
     drawNumber(x+21, y+5, speed, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, "kmh", 0)
+    drawText(getLastPos(), y+8, 'kmh', 0)
 
 end
 
 
 local function headingWidget(x, y)
 
-    local heading = getValue("Hdg")
+    local heading = getValue('Hdg')
 
-    drawPixmap(x+1, y+2, "/IMAGES/TELEM/compass.bmp")
+    drawPixmap(x+1, y+2, '/IMAGES/TELEM/compass.bmp')
     drawNumber(x+21, y+5, heading, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, "dg", 0)
+    drawText(getLastPos(), y+8, 'dg', 0)
 
 end
 
 
 local function modeWidget(x, y)
 
-    local m = math.floor(getValue("RPM") % 100)
+    local m = math.floor(getValue('RPM') % 100)
 
     if linq <= 20 and m == 0 then m = -1 end -- No Telemetry
 
-    drawPixmap(x+1, y+2, "/IMAGES/TELEM/fm.bmp")
+    drawPixmap(x+1, y+2, '/IMAGES/TELEM/fm.bmp')
     drawText(x+18, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
 
     if prevMode ~= m and flightMode[m].sound then
         prevMode = m
-        playFile(flightMode[m].sound .. ".wav")
+        playFile(flightMode[m].sound .. '.wav')
     end
 
 end
@@ -272,7 +273,7 @@ local function timerWidget(x, y)
     if timer < 0 then
         style = style + INVERS
     end
-    drawPixmap(x+1, y+3, "/IMAGES/TELEM/timer_1.bmp")
+    drawPixmap(x+1, y+3, '/IMAGES/TELEM/timer_1.bmp')
     drawTimer(x+21, y+5, timer, style)
 
 end
@@ -280,22 +281,22 @@ end
 
 local function gpsWidget(x,y)
 
-    local sats = getValue("Sats")
-    local fix  = getValue("Fix")
+    local sats = getValue('Sats')
+    local fix  = getValue('Fix')
 
-    local fixImg = "/IMAGES/TELEM/sat0.bmp"
-    if     fix == 2 then fixImg = "/IMAGES/TELEM/sat1.bmp"
-    elseif fix == 3 then fixImg = "/IMAGES/TELEM/sat2.bmp"
-    elseif fix == 4 then fixImg = "/IMAGES/TELEM/sat3.bmp"
+    local fixImg = '/IMAGES/TELEM/sat0.bmp'
+    if     fix == 2 then fixImg = '/IMAGES/TELEM/sat1.bmp'
+    elseif fix == 3 then fixImg = '/IMAGES/TELEM/sat2.bmp'
+    elseif fix == 4 then fixImg = '/IMAGES/TELEM/sat3.bmp'
     end
 
-    local satImg = "/IMAGES/TELEM/gps_0.bmp"
-    if     sats > 5 then satImg = "/IMAGES/TELEM/gps_6.bmp"
-    elseif sats > 4 then satImg = "/IMAGES/TELEM/gps_5.bmp"
-    elseif sats > 3 then satImg = "/IMAGES/TELEM/gps_4.bmp"
-    elseif sats > 2 then satImg = "/IMAGES/TELEM/gps_3.bmp"
-    elseif sats > 1 then satImg = "/IMAGES/TELEM/gps_2.bmp"
-    elseif sats > 0 then satImg = "/IMAGES/TELEM/gps_1.bmp"
+    local satImg = '/IMAGES/TELEM/gps_0.bmp'
+    if     sats > 5 then satImg = '/IMAGES/TELEM/gps_6.bmp'
+    elseif sats > 4 then satImg = '/IMAGES/TELEM/gps_5.bmp'
+    elseif sats > 3 then satImg = '/IMAGES/TELEM/gps_4.bmp'
+    elseif sats > 2 then satImg = '/IMAGES/TELEM/gps_3.bmp'
+    elseif sats > 1 then satImg = '/IMAGES/TELEM/gps_2.bmp'
+    elseif sats > 0 then satImg = '/IMAGES/TELEM/gps_1.bmp'
     end
 
     drawPixmap(x+1, y+1, fixImg)
@@ -315,17 +316,17 @@ local function run(event)
     local y = -1
     local w
 
-    for col=1, #widgets do
-        if #widgets[col] == 1 then
+    for col=1, #layout do
+        if #layout[col] == 1 then
             w = widgetWidthSingle
         else
             w = widgetWidthMulti
         end
 
-        for row=1, #widgets[col] do
+        for row=1, #layout[col] do
             drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
-            widget[widgets[col][row]](x+1, y+1) --call widget
-            y = y + math.floor(displayHeight / #widgets[col])
+            widget[layout[col][row]](x+1, y+1) --call widget
+            y = y + math.floor(displayHeight / #layout[col])
         end
 
         y = -1
@@ -348,20 +349,20 @@ end
 
 local function init()
 
-    widget["alt"] = altitudeWidget
-    widget["battery"] = batteryWidget
-    widget["dist"] = distWidget
-    widget["mode"] = modeWidget
-    widget["gps"] = gpsWidget
-    widget["heading"] = headingWidget
-    widget["rssi"] = rssiWidget
-    widget["speed"] = speedWidget
-    widget["timer"] = timerWidget
+    widget['alt'] = altitudeWidget
+    widget['battery'] = batteryWidget
+    widget['dist'] = distWidget
+    widget['mode'] = modeWidget
+    widget['gps'] = gpsWidget
+    widget['heading'] = headingWidget
+    widget['rssi'] = rssiWidget
+    widget['speed'] = speedWidget
+    widget['timer'] = timerWidget
 
     local colsSingle = 0
     local colsMulti  = 0
-    for i=1, #widgets do
-        if #widgets[i] == 1 then
+    for i=1, #layout do
+        if #layout[i] == 1 then
             colsSingle = colsSingle + 1
         else
             colsMulti = colsMulti + 1
