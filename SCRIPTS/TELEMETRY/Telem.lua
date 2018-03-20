@@ -28,9 +28,6 @@ local layout	= {	-- screen widgets
 local fuel		= 0
 local linq		= 0
 local prevMode		= 0
-local dispTime		= 0
-local prevTime		= 0
-local displayFrame	= 0
 local displayWidth	= 212
 local displayHeight	= 64
 local widgetWidthSingle	= 35
@@ -71,7 +68,35 @@ local getLastPos = lcd.getLastPos
 local getValue = getValue
 
 
--- widget functions  -----------------------------------------------------------
+-- functions  -----------------------------------------------------------------
+
+local timer = {
+                draw = { ticks = 0, saved = 0 },
+              }
+
+function Timer:new(o)
+    o = o or {}   -- create object if user does not provide one
+    setmetatable(o, self)
+    self.__index = self
+    o.ticks = 0
+    o.saved = 0
+    return o
+end
+
+
+function Timer:tick()
+    self.ticks = self.ticks + (getTime() - self.saved)
+    if self.ticks >= 200 then -- 2s
+	if self.frame == 0 then 
+	    self.frame = 1 
+	else 
+	    self.frame = 0
+	end
+	self.ticks = 0
+    end
+    self.saved = getTime()
+end
+
 
 local function round(n, p)
     p = 10^(p or 0)
@@ -82,6 +107,8 @@ local function round(n, p)
     end
 end
 
+
+-- widget functions  -----------------------------------------------------------
 
 local function batteryWidget(x, y)
 
@@ -155,10 +182,10 @@ local function batteryWidget(x, y)
         style = style + BLINK
     end
 
-    if displayFrame == 0 then
+    if timer.draw.frame == 0 then
 	drawText(x, y+54, battCells..'S ', 0)
 	drawNumber(getLastPos(), y+54, cellVolt*100, style)
-    elseif displayFrame == 1 then
+    elseif timer.draw.frame == 1 then
 	drawNumber(x+5, y+54, battVolt*100, style)
 	if highVolt then drawText(getLastPos(), y+54, 'H', 0) end
     end
@@ -333,16 +360,16 @@ local function run(event)
         x = x + w
     end
 
-    dispTime = dispTime + (getTime() - prevTime)
-    if dispTime >= 200 then -- 2s
-	if displayFrame == 0 then 
-	    displayFrame = 1 
+    timer.draw.ticks = timer.draw.ticks + (getTime() - timer.draw.saved)
+    if timer.draw.ticks >= 200 then -- 2s
+	if timer.draw.frame == 0 then 
+	    timer.draw.frame = 1 
 	else 
-	    displayFrame = 0
+	    timer.draw.frame = 0
 	end
-	dispTime = 0
+	timer.draw.ticks = 0
     end
-    prevTime = getTime()
+    timer.draw.saved = getTime()
 
 end
 
