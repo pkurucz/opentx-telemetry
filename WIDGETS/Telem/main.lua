@@ -14,10 +14,11 @@
 
 local Altd	= 'GAlt' -- 'Alt' for barometric or 'GAlt' GPS altitude
 local battCells	= 0	-- 5=5S or 7=7S or autodetect 1S, 2S, 3S, 4S, 6S or 8S
-local cellMinV	= 3.30	-- minimum voltage alert threshold
+local maxAmps	= 60	-- maximum current alert threshold
+local minVolt	= 3.30	-- minimum voltage alert threshold per cell
 local layout	= {	-- screen widgets
                     { 'battery' },
-                    { 'gps', 'dist', 'alt' },
+                    { 'gps', 'altitude', 'curr' },
                     { 'mode', 'speed', 'timer' },
                     { 'rssi' },
                   }
@@ -25,8 +26,14 @@ local layout	= {	-- screen widgets
 
 -- module globals  -------------------------------------------------------------
 
-local fuel		= 0
-local linq		= 0
+local options = {
+                  { 'Altitude', SOURCE, 1 },
+                  { 'Cells', VALUE, 4 },
+                }
+
+local battMin, battMax, imperial, language, voice = getGeneralSettings()
+local version, radio, maj, min, rev = getVersion() 
+local rssi		= 0
 local prevMode		= 0
 local displayWidth	= 212
 local displayHeight	= 64
@@ -34,116 +41,188 @@ local widgetWidthSingle	= 35
 local widgetWidthMulti	= 0
 local widget		= {}
 local flightMode	= {}
-
-flightMode[-1] = { name = 'NoTelem',				style = BLINK }
+flightMode[-1] = { name = 'No Telem',				style = BLINK }
 flightMode[ 0] = { name = 'Manual',	sound = 'fm-mnl',	style = 0 }
 flightMode[ 1] = { name = 'Acro',	sound = 'fm-acr',	style = 0 }
-flightMode[ 2] = { name = 'Level',	sound = 'fm-lvl',	style = 0 }
+flightMode[ 2] = { name = 'Leveling',	sound = 'fm-lvl',	style = 0 }
 flightMode[ 3] = { name = 'Horizon',	sound = 'fm-hrzn',	style = 0 }
-flightMode[ 4] = { name = 'AxisLck',	sound = 'fm-axlk',	style = 0 }
-flightMode[ 5] = { name = 'VirtBar',	sound = 'fm-vbar',	style = 0 }
-flightMode[ 6] = { name = 'Stabil1',	sound = 'fm-stb1',	style = 0 }
-flightMode[ 7] = { name = 'Stabil2',	sound = 'fm-stb2',	style = 0 }
-flightMode[ 8] = { name = 'Stabil3',	sound = 'fm-stb3',	style = 0 }
-flightMode[ 9] = { name = 'Autotune',	sound = 'fm-tune',	style = BLINK }
-flightMode[10] = { name = 'AltHold',	sound = 'fm-ahld',	style = 0 }
-flightMode[11] = { name = 'PosHold',	sound = 'fm-phld',	style = 0 }
-flightMode[12] = { name = 'RToHome',	sound = 'fm-rth',	style = 0 }
-flightMode[13] = { name = 'PathPln',	sound = 'fm-plan',	style = 0 }
-flightMode[15] = { name = 'Acro+',	sound = 'fm-acrp',	style = 0 }
-flightMode[16] = { name = 'AcroDyne',	sound = 'fm-acrd',	style = 0 }
-flightMode[17] = { name = 'FailSafe',	sound = 'fm-fail',	style = BLINK }
+flightMode[ 4] = { name = 'Axis Lock',	sound = 'fm-axlk',	style = 0 }
+flightMode[ 5] = { name = 'VrtualBar',	sound = 'fm-vbar',	style = 0 }
+flightMode[ 6] = { name = 'Stablzd 1',	sound = 'fm-stb1',	style = 0 }
+flightMode[ 7] = { name = 'Stablzd 2',	sound = 'fm-stb2',	style = 0 }
+flightMode[ 8] = { name = 'Stablzd 3',	sound = 'fm-stb3',	style = 0 }
+flightMode[ 9] = { name = 'Auto Tune',	sound = 'fm-tune',	style = BLINK }
+flightMode[10] = { name = 'Alt. Hold',	sound = 'fm-ahld',	style = 0 }
+flightMode[11] = { name = 'Pos. Hold',	sound = 'fm-phld',	style = 0 }
+flightMode[12] = { name = 'RtnToHome',	sound = 'fm-rth',	style = 0 }
+flightMode[13] = { name = 'Path Plnr',	sound = 'fm-plan',	style = 0 }
+flightMode[15] = { name = 'Acro Plus',	sound = 'fm-acrp',	style = 0 }
+flightMode[16] = { name = 'Acro Dyne',	sound = 'fm-acrd',	style = 0 }
+flightMode[17] = { name = 'Fail Safe',	sound = 'fm-fail',	style = BLINK }
 
-
--- optimize  -------------------------------------------------------------------
-
-local drawLine = lcd.drawLine
-local drawNumber = lcd.drawNumber
-local drawPixmap = lcd.drawPixmap
-local drawRectangle = lcd.drawRectangle
-local drawFilledRectangle = lcd.drawFilledRectangle
-local drawText = lcd.drawText
-local drawTimer = lcd.drawTimer
-local getLastPos = lcd.getLastPos
-local getValue = getValue
+local image = {}
+image.altitude = '/IMAGES/TELEM/hgt.bmp'
+image.compass  = '/IMAGES/TELEM/compass.bmp'
+image.dist     = '/IMAGES/TELEM/dist.bmp'
+image.mode     = '/IMAGES/TELEM/fm.bmp'
+image.speed    = '/IMAGES/TELEM/speed.bmp'
+image.timer    = '/IMAGES/TELEM/timer_1.bmp'
+image.rssi00   = '/IMAGES/TELEM/RSSIh00.bmp'
+image.rssi01   = '/IMAGES/TELEM/RSSIh01.bmp'
+image.rssi02   = '/IMAGES/TELEM/RSSIh02.bmp'
+image.rssi03   = '/IMAGES/TELEM/RSSIh03.bmp'
+image.rssi04   = '/IMAGES/TELEM/RSSIh04.bmp'
+image.rssi05   = '/IMAGES/TELEM/RSSIh05.bmp'
+image.rssi06   = '/IMAGES/TELEM/RSSIh06.bmp'
+image.rssi07   = '/IMAGES/TELEM/RSSIh07.bmp'
+image.rssi08   = '/IMAGES/TELEM/RSSIh08.bmp'
+image.rssi09   = '/IMAGES/TELEM/RSSIh09.bmp'
+image.rssi10   = '/IMAGES/TELEM/RSSIh10.bmp'
+image.sat0     = '/IMAGES/TELEM/sat0.bmp'
+image.sat1     = '/IMAGES/TELEM/sat1.bmp'
+image.sat2     = '/IMAGES/TELEM/sat2.bmp'
+image.sat3     = '/IMAGES/TELEM/sat3.bmp'
+image.gps0     = '/IMAGES/TELEM/gps_0.bmp'
+image.gps1     = '/IMAGES/TELEM/gps_1.bmp'
+image.gps2     = '/IMAGES/TELEM/gps_2.bmp'
+image.gps3     = '/IMAGES/TELEM/gps_3.bmp'
+image.gps4     = '/IMAGES/TELEM/gps_4.bmp'
+image.gps5     = '/IMAGES/TELEM/gps_5.bmp'
+image.gps6     = '/IMAGES/TELEM/gps_6.bmp'
 
 
 -- functions  -----------------------------------------------------------------
 
-local timer = {
-                draw = { ticks = 0, saved = 0 },
-              }
-
-function Timer:new(o)
-    o = o or {}   -- create object if user does not provide one
-    setmetatable(o, self)
-    self.__index = self
-    o.ticks = 0
-    o.saved = 0
-    return o
-end
+local getLastPos = lcd.getLastRightPos
 
 
-function Timer:tick()
-    self.ticks = self.ticks + (getTime() - self.saved)
-    if self.ticks >= 200 then -- 2s
-	if self.frame == 0 then 
-	    self.frame = 1 
-	else 
-	    self.frame = 0
-	end
-	self.ticks = 0
+local function drawBitmap(x, y, image)
+    if radio == 'x10' or radio == 'x12s' then
+        return lcd.drawBitmap(image, x, y)
+    else
+	return lcd.drawPixmap(x, y, image)
     end
-    self.saved = getTime()
 end
 
 
 local function round(n, p)
     p = 10^(p or 0)
     if n >= 0 then
-	return math.floor(n * p + 0.5) / p
+        return math.floor(n * p + 0.5) / p
     else
-	return math.ceil(n * p - 0.5) / p
+        return math.ceil(n * p - 0.5) / p
     end
 end
 
 
--- widget functions  -----------------------------------------------------------
+local Timer = {}
+function Timer:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    self.ticks = 0
+    self.time = getTime()
+    return o
+end
 
-local function batteryWidget(x, y)
 
-    local battVolt = 0
-    local cellVolt = getValue('Cels')
-    if type(cellVolt) == 'table' then -- FrSky FLVSS
-	battCells = 0
-	for i, v in ipairs(cellVolt) do
-	    battVolt = battVolt + v
-	    battCells = battCells + 1
+local post = Timer:new({ rssi=0, altd=0, gspd=0, lat=0, lon=0, batt=0, cell=0, curr=0 })
+function post:refresh(ticks)
+    self.ticks = self.ticks + (getTime() - self.time)
+    if self.ticks >= ticks then
+        self.ticks = 0
+	if self.rssi == 0 and rssi > 0 then -- reset
+	    self.altd = 0
+	    self.gspd = 0
+	    self.lat  = 0
+	    self.lon  = 0
+	    self.batt = 35
+	    self.cell = 5
+	    self.curr = 0
 	end
-    elseif cellVolt == 0 then
-	battVolt = getValue('VFAS')
+	self.rssi = rssi
+    end
+    self.time = getTime()
+    return self
+end
+
+
+local draw = Timer:new()
+function draw:refresh(ticks)
+    self.ticks = self.ticks + (getTime() - self.time)
+    if self.ticks >= ticks then
+        self.ticks = 0
+        if self.frame == 1 then 
+            self.frame = 2 
+        else 
+            self.frame = 1
+        end
+    end
+    self.time = getTime()
+    return self
+end
+
+
+local curr = Timer:new({ mean=0 })
+function curr:refresh(ticks)
+    self.amps = getValue('Curr')
+    self.mean = self.amps * 0.01 + self.mean * 0.99
+    if self.mean > maxAmps then 
+        self.ticks = self.ticks + (getTime() - self.time)
+        if self.ticks >= ticks then
+            self.ticks = 0
+            playFile('currdrw.wav')
+            playNumber(self.amps, UNIT_AMPS)
+        end
+        self.time = getTime()
+    end
+    return self
+end
+
+
+local batt = Timer:new({ cells=battCells, cellv=0, volts=0, fuel=0, perc=0 })
+function batt:read()
+    self.cellv = getValue('Cels')
+    if type(self.cellv) == 'table' then -- FrSky FLVSS
+        self.cells = 0
+        for i, v in ipairs(self.cellv) do
+            self.volts = self.volts + v
+            self.cells = self.cells + 1
+        end
+    elseif self.cellv == 0 then
+        self.volts = getValue('VFAS')
     else -- dRonin et al
-	battVolt = cellVolt
+        self.volts = self.cellv
     end
 
-    if battCells ~= 5 or battCells ~= 7 then -- no autodetect for 5S & 7S
-        if math.ceil(battVolt / 4.37) > battCells and battVolt < 4.37 * 8 then 
-            battCells = math.ceil(battVolt / 4.37)
-            if battCells == 7 then battCells = 8 end -- empty 8S looks like 7S
-            if battCells == 5 then battCells = 6 end -- empty 6S looks like 5S
+    if self.cells ~= 5 or self.cells ~= 7 then -- no autodetect for 5S & 7S
+        if math.ceil(self.volts / 4.37) > self.cells and self.volts < 4.37 * 8 then 
+            self.cells = math.ceil(self.volts / 4.37)
+            if self.cells == 7 then self.cells = 8 end -- empty 8S looks like 7S
+            if self.cells == 5 then self.cells = 6 end -- empty 6S looks like 5S
         end
     end
 
-    if battCells > 0 then 
-        cellVolt = battVolt / battCells 
+    if self.cells > 0 then 
+        self.cellv = self.volts / self.cells 
     end
 
     local v = 0
-    local highVolt = battVolt > 4.22 * battCells
+    local highVolt = self.volts > 4.22 * self.cells
     if highVolt then
-	v = cellVolt - 0.15
+        v = self.cellv - 0.15
     else
-	v = cellVolt
+        v = self.cellv
+    end
+
+    if v > 0 and self.cellv < post.cell then
+        post.cell = self.cellv
+        post.batt = self.volts
+    elseif rssi == 0 then -- No Telemetry
+        self.cellv = post.cell
+	self.volts = post.batt
+	self.fuel = 0
+	self.perc = 0
     end
 
     if     v >  4.2		then v = 100
@@ -153,189 +232,253 @@ local function batteryWidget(x, y)
     elseif v >  3.67 and v < 4	then v = 212.53 * v - 765.29
     end
 
-    if linq <= 20 and prevMode == 0 then fuel = 0 end -- No Telemetry
-
-    if fuel == 0 then 
-	fuel = round(v) --init percent
+    if self.fuel == 0 then 
+        self.fuel = round(v) --init percent
     else 
-	fuel = round(fuel * 0.98 + 0.02 * v)
+        self.fuel = round(self.fuel * 0.98 + 0.02 * v)
     end
+    return self
+end
 
-    drawNumber(x+10, y, fuel, SMLSIZE)
-    drawText(getLastPos(), y, '%', SMLSIZE)
 
-    drawFilledRectangle(x+13, y+9, 5, 2, 0)
-    drawRectangle(x+10, y+11, 11, 40)
+function batt:refresh(ticks)
+    self:read()
+    if rssi > 0 and self.fuel < self.perc - 10 then 
+        self.ticks = self.ticks + (getTime() - self.time)
+        if self.ticks >= ticks then
+            self.ticks = 0
+            self.perc = round(self.fuel * 0.1) * 10
+            if self.perc <= 10 then 
+        	playFile('batcrit.wav') 
+            end
+            if self.cellv < minVolt and self.volts > 0.5 then
+        	playFile('battcns.wav')
+            end
+            playNumber(self.perc, UNIT_PERCENT)
+        end
+        self.time = getTime()
+    end
+    return self
+end
 
-    local myPxHeight = math.floor(fuel * 0.37)
+
+-- widget functions  -----------------------------------------------------------
+
+local function drawBattery(x, y)
+    batt:read()
+    lcd.drawNumber(x+10, y, batt.fuel, SMLSIZE)
+    lcd.drawText(getLastPos(), y, '%', SMLSIZE)
+
+    lcd.drawFilledRectangle(x+13, y+9, 5, 2, 0)
+    lcd.drawRectangle(x+10, y+11, 11, 40)
+
+    local myPxHeight = math.floor(batt.fuel * 0.37)
     local myPxY = 13 + 37 - myPxHeight
-    if fuel > 0 then
-        drawFilledRectangle(x+11, myPxY, 9, myPxHeight, 0)
+    if batt.fuel > 0 then
+        lcd.drawFilledRectangle(x+11, myPxY, 9, myPxHeight, 0)
     end
 
     for i=36, 1, -2 do
-        drawLine(x+12, y+12+i, x+18, y+12+i, SOLID, GREY_DEFAULT)
+        lcd.drawLine(x+12, y+12+i, x+18, y+12+i, SOLID, GREY_DEFAULT)
     end
 
     local style = LEFT + PREC2
-    if cellVolt < cellMinV then
+    if batt.cellv < minVolt then
         style = style + BLINK
     end
 
-    if timer.draw.frame == 0 then
-	drawText(x, y+54, battCells..'S ', 0)
-	drawNumber(getLastPos(), y+54, cellVolt*100, style)
-    elseif timer.draw.frame == 1 then
-	drawNumber(x+5, y+54, battVolt*100, style)
-	if highVolt then drawText(getLastPos(), y+54, 'H', 0) end
+    if draw.frame == 1 then
+        lcd.drawText(x, y+54, batt.cells..'S', 0)
+        lcd.drawNumber(getLastPos()+1, y+54, batt.cellv*100, style)
+    elseif draw.frame == 2 then
+        lcd.drawNumber(x+5, y+54, batt.volts*100, style)
+        if highVolt then lcd.drawText(getLastPos(), y+54, 'H', 0) end
     end
-    drawText(getLastPos(), y+54, 'V', 0)
-
+    lcd.drawText(getLastPos(), y+54, 'V', 0)
 end
 
 
-local function rssiWidget(x, y)
-
-    linq = getValue('RQly')	-- Crossfire Rx Link Quality
-    if linq == 0 then
-	linq = getValue('RSSI')	-- FrSky et al
-    end
+local function drawRSSI(x, y)
+    rssi = getRSSI()
         
     local percent = 0
-    if linq > 38 then
-        percent = (math.log(linq-28, 10) - 1) / (math.log(72, 10) - 1) * 100
+    if rssi > 38 then
+        percent = (math.log(rssi - 28, 10) - 1) / (math.log(72, 10) - 1) * 100
     end
 
-    local pixmap = '/IMAGES/TELEM/RSSIh00.bmp'
-    if     percent > 90 then pixmap = '/IMAGES/TELEM/RSSIh10.bmp'
-    elseif percent > 80 then pixmap = '/IMAGES/TELEM/RSSIh09.bmp'
-    elseif percent > 70 then pixmap = '/IMAGES/TELEM/RSSIh08.bmp'
-    elseif percent > 60 then pixmap = '/IMAGES/TELEM/RSSIh07.bmp'
-    elseif percent > 50 then pixmap = '/IMAGES/TELEM/RSSIh06.bmp'
-    elseif percent > 40 then pixmap = '/IMAGES/TELEM/RSSIh05.bmp'
-    elseif percent > 30 then pixmap = '/IMAGES/TELEM/RSSIh04.bmp'
-    elseif percent > 20 then pixmap = '/IMAGES/TELEM/RSSIh03.bmp'
-    elseif percent > 10 then pixmap = '/IMAGES/TELEM/RSSIh02.bmp'
-    elseif percent >  0 then pixmap = '/IMAGES/TELEM/RSSIh01.bmp'
+    local pixmap = image.rssi00
+    if     percent > 90 then pixmap = image.rssi10
+    elseif percent > 80 then pixmap = image.rssi09
+    elseif percent > 70 then pixmap = image.rssi08
+    elseif percent > 60 then pixmap = image.rssi07
+    elseif percent > 50 then pixmap = image.rssi06
+    elseif percent > 40 then pixmap = image.rssi05
+    elseif percent > 30 then pixmap = image.rssi04
+    elseif percent > 20 then pixmap = image.rssi03
+    elseif percent > 10 then pixmap = image.rssi02
+    elseif percent >  0 then pixmap = image.rssi01
     end
 
-    drawPixmap(x+4, y+3, pixmap)
-    drawNumber(x+6, y, percent*10, PREC1)
-    drawText(getLastPos(), y, '%', 0)
-    drawText(x+6, y+54, linq .. 'dB', 0)
-
+    drawBitmap(x+4, y+3, pixmap)
+    lcd.drawNumber(x+6, y, percent * 10, PREC1)
+    lcd.drawText(getLastPos(), y, '%', 0)
+    lcd.drawText(x+6, y+54, rssi .. 'dB', 0)
 end
 
 
-local function distWidget(x, y)
-
-    local dist = getValue('Dist')
-
-    drawPixmap(x+1, y+2, '/IMAGES/TELEM/dist.bmp')
-    drawNumber(x+21, y+5, dist, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, 'm', 0)
-
+local function drawGPS(x, y)
+    local gps = getValue('GPS')
+    if type(gps) == 'table' then
+        post.lat = gps.lat
+        post.lon = gps.lon
+    end
+    lcd.drawFilledRectangle(x+1, y+1, 26, 17, SOLID)
+    lcd.drawText(x+7, y+3, 'Lat', SMLSIZE + INVERS)
+    lcd.drawText(x+7, y+10, 'Lon', SMLSIZE + INVERS)
+    lcd.drawText(x+30, y+3, post.lat, SMLSIZE)
+    lcd.drawText(x+30, y+10, post.lon, SMLSIZE)
 end
 
 
-local function altitudeWidget(x, y)
-
-    local altitude = getValue(Altd)
-
-    drawPixmap(x+1, y+2, '/IMAGES/TELEM/hgt.bmp')
-    drawNumber(x+21, y+5, altitude, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, 'm', 0)
-
-end
-
-
-local function speedWidget(x, y)
-
-    local speed = getValue('GSpd') * 3.6
-
-    drawPixmap(x+1, y+2, '/IMAGES/TELEM/speed.bmp')
-    drawNumber(x+21, y+5, speed, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, 'kmh', 0)
-
-end
-
-
-local function headingWidget(x, y)
-
-    local heading = getValue('Hdg')
-
-    drawPixmap(x+1, y+2, '/IMAGES/TELEM/compass.bmp')
-    drawNumber(x+21, y+5, heading, MIDSIZE + LEFT)
-    drawText(getLastPos(), y+8, 'dg', 0)
-
-end
-
-
-local function modeWidget(x, y)
-
+local function drawMode(x, y)
     local m = math.floor(getValue('RPM') % 100)
-
-    if linq <= 20 and m == 0 then m = -1 end -- No Telemetry
-
-    drawPixmap(x+1, y+2, '/IMAGES/TELEM/fm.bmp')
-    drawText(x+18, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
-
+    if rssi == 0 and m == 0 then m = -1 end -- No Telemetry
+    lcd.drawText(x+2, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
     if prevMode ~= m and flightMode[m].sound then
         prevMode = m
         playFile(flightMode[m].sound .. '.wav')
     end
-
 end
 
 
-local function timerWidget(x, y)
+local function drawCurr(x, y)
+    local curr = getValue('Curr')
+    if curr > post.curr then
+	post.curr = curr
+    elseif rssi == 0 then
+        curr = post.curr
+    end
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
+    lcd.drawText(x+2, y+4, 'Cur', MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, curr, MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, 'Amp', 0)
+end
 
+
+local function drawDist(x, y)
+    local dist = getValue('Dist')
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
+    lcd.drawText(x+2, y+4, 'Dst', MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, dist, MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, 'm', 0)
+end
+
+
+local function drawAltitude(x, y)
+    local altitude = getValue(Altd)
+    if altitude > post.altd then
+	post.altd = altitude
+    elseif rssi == 0 then
+        altitude = post.altd
+    end
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
+    lcd.drawText(x+2, y+4, 'Alt', MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, altitude, MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, 'm', 0)
+end
+
+
+local function drawSpeed(x, y)
+    local speed = getValue('GSpd') * 3.6
+    if speed > post.gspd then
+	post.gspd = speed
+    elseif rssi == 0 then
+        speed = post.gspd
+    end
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
+    lcd.drawText(x+2, y+4, 'Spd', MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, speed, MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, 'kmh', 0)
+end
+
+
+local function drawHeading(x, y)
+    local heading = getValue('Hdg')
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
+    lcd.drawText(x+2, y+4, 'Hdg', MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, heading, MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, 'dg', 0)
+end
+
+
+local function drawTimer(x, y)
     local style = MIDSIZE
     local timer = model.getTimer(0)
     if timer then
-	timer = timer.value
+        timer = timer.value
     else
-	timer = 0
+        timer = 0
     end
     if timer < 0 then
         style = style + INVERS
     end
-    drawPixmap(x+1, y+3, '/IMAGES/TELEM/timer_1.bmp')
-    drawTimer(x+21, y+5, timer, style)
-
-end
-
-
-local function gpsWidget(x,y)
-
-    local sats = getValue('Sats')
-    local fix  = getValue('Fix')
-
-    local fixImg = '/IMAGES/TELEM/sat0.bmp'
-    if     fix == 2 then fixImg = '/IMAGES/TELEM/sat1.bmp'
-    elseif fix == 3 then fixImg = '/IMAGES/TELEM/sat2.bmp'
-    elseif fix == 4 then fixImg = '/IMAGES/TELEM/sat3.bmp'
-    end
-
-    local satImg = '/IMAGES/TELEM/gps_0.bmp'
-    if     sats > 5 then satImg = '/IMAGES/TELEM/gps_6.bmp'
-    elseif sats > 4 then satImg = '/IMAGES/TELEM/gps_5.bmp'
-    elseif sats > 3 then satImg = '/IMAGES/TELEM/gps_4.bmp'
-    elseif sats > 2 then satImg = '/IMAGES/TELEM/gps_3.bmp'
-    elseif sats > 1 then satImg = '/IMAGES/TELEM/gps_2.bmp'
-    elseif sats > 0 then satImg = '/IMAGES/TELEM/gps_1.bmp'
-    end
-
-    drawPixmap(x+1, y+1, fixImg)
-    drawPixmap(x+13, y+3, satImg)
-    drawNumber(x+19, y+1, sats, SMLSIZE)
-
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
+    lcd.drawText(x+2, y+4, 'Tmr', MIDSIZE + INVERS)
+    lcd.drawTimer(x+30, y+4, timer, style)
 end
 
 
 -- main logic  -----------------------------------------------------------------
 
-local function run(event)
+local function create(zone, options)
+
+    widget.altitude = drawAltitude
+    widget.battery  = drawBattery
+    widget.curr     = drawCurr
+    widget.dist     = drawDist
+    widget.mode     = drawMode
+    widget.gps      = drawGPS
+    widget.heading  = drawHeading
+    widget.rssi     = drawRSSI
+    widget.speed    = drawSpeed
+    widget.timer    = drawTimer
+
+    local colsSingle = 0
+    local colsMulti  = 0
+    for i=1, #layout do
+        if #layout[i] == 1 then
+            colsSingle = colsSingle + 1
+        else
+            colsMulti = colsMulti + 1
+        end
+    end
+
+    widgetWidthMulti = displayWidth - (colsSingle * widgetWidthSingle)
+    widgetWidthMulti = widgetWidthMulti / colsMulti
+
+    if radio == 'x10' or radio == 'x12s' then
+        for name, path in pairs(image) do
+	    image[name] = Bitmap.open(path)
+	end
+    end
+
+    return { zone=zone, options=options }
+end
+
+
+local function update(zone, options)
+    zone.options = options
+end
+
+
+local function background(zone)
+    curr:refresh(250) -- 2.5 seconds
+    batt:refresh(800) -- 8 seconds
+    post:refresh(100) -- 1 second
+end
+
+
+local function refresh(zone)
 
     lcd.clear()
 
@@ -351,7 +494,7 @@ local function run(event)
         end
 
         for row=1, #layout[col] do
-            drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
+            lcd.drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
             widget[layout[col][row]](x+1, y+1) --call widget
             y = y + math.floor(displayHeight / #layout[col])
         end
@@ -360,48 +503,12 @@ local function run(event)
         x = x + w
     end
 
-    timer.draw.ticks = timer.draw.ticks + (getTime() - timer.draw.saved)
-    if timer.draw.ticks >= 200 then -- 2s
-	if timer.draw.frame == 0 then 
-	    timer.draw.frame = 1 
-	else 
-	    timer.draw.frame = 0
-	end
-	timer.draw.ticks = 0
-    end
-    timer.draw.saved = getTime()
-
-end
-
-
-local function init()
-
-    widget['alt'] = altitudeWidget
-    widget['battery'] = batteryWidget
-    widget['dist'] = distWidget
-    widget['mode'] = modeWidget
-    widget['gps'] = gpsWidget
-    widget['heading'] = headingWidget
-    widget['rssi'] = rssiWidget
-    widget['speed'] = speedWidget
-    widget['timer'] = timerWidget
-
-    local colsSingle = 0
-    local colsMulti  = 0
-    for i=1, #layout do
-        if #layout[i] == 1 then
-            colsSingle = colsSingle + 1
-        else
-            colsMulti = colsMulti + 1
-        end
-    end
-
-    widgetWidthMulti = (displayWidth - (colsSingle * widgetWidthSingle))
-    widgetWidthMulti = widgetWidthMulti / colsMulti
+    draw:refresh(200) -- 2 seconds
+    background(zone)
 
 end
 
 
 -- module definition  ----------------------------------------------------------
 
-return {init=init, run=run}
+return { name='Telem', options=options, update=update, create=create, init=create, refresh=refresh, run=refresh, background=background }
