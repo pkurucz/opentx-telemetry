@@ -22,6 +22,7 @@ local layout	= {	-- screen widgets
                     { 'mode', 'speed', 'timer' },
                     { 'rssi' },
                   }
+local LQG	= false	-- set to `true` for LQG builds, otherwise `false`
 
 
 -- module globals  -------------------------------------------------------------
@@ -41,6 +42,7 @@ local widgetWidthSingle	= 35
 local widgetWidthMulti	= 0
 local widget		= {}
 local flightMode	= {}
+flightMode[-2] = { name = 'Invalid',				style = BLINK }
 flightMode[-1] = { name = 'No Telem',				style = BLINK }
 flightMode[ 0] = { name = 'Manual',	sound = 'fm-mnl',	style = 0 }
 flightMode[ 1] = { name = 'Acro',	sound = 'fm-acr',	style = 0 }
@@ -58,7 +60,9 @@ flightMode[12] = { name = 'RtnToHome',	sound = 'fm-rth',	style = 0 }
 flightMode[13] = { name = 'Path Plnr',	sound = 'fm-plan',	style = 0 }
 flightMode[15] = { name = 'Acro Plus',	sound = 'fm-acrp',	style = 0 }
 flightMode[16] = { name = 'Acro Dyne',	sound = 'fm-acrd',	style = 0 }
-flightMode[17] = { name = 'Fail Safe',	sound = 'fm-fail',	style = BLINK }
+flightMode[17] = { name = 'LQG Acro',	sound = 'fm-acr',	style = 0 }
+flightMode[18] = { name = 'LQG Level',	sound = 'fm-lvl',	style = 0 }
+flightMode[19] = { name = 'Fail Safe',	sound = 'fm-fail',	style = BLINK }
 
 local image = {}
 image.altitude = '/IMAGES/TELEM/hgt.bmp'
@@ -343,6 +347,8 @@ end
 local function drawMode(x, y)
     local m = math.floor(getValue('RPM') % 100)
     if rssi == 0 and m == 0 then m = -1 end -- No Telemetry
+    if not flightMode[m] then m = -2 end -- Invalid Flight Mode
+    if not LQG and m == 17 then m = 19 end -- LQG FailSafe kludge
     lcd.drawText(x+2, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
     if prevMode ~= m and flightMode[m].sound then
         prevMode = m
