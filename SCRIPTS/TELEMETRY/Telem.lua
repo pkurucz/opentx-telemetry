@@ -58,6 +58,7 @@ flightMode[10] = { name = 'Alt. Hold',	sound = 'fm-ahld',	style = 0 }
 flightMode[11] = { name = 'Pos. Hold',	sound = 'fm-phld',	style = 0 }
 flightMode[12] = { name = 'RtnToHome',	sound = 'fm-rth',	style = 0 }
 flightMode[13] = { name = 'Path Plnr',	sound = 'fm-plan',	style = 0 }
+flightMode[14] = { name = 'TabletCtl',	sound = 'fm-tblt',	style = 0 }
 flightMode[15] = { name = 'Acro Plus',	sound = 'fm-acrp',	style = 0 }
 flightMode[16] = { name = 'Acro Dyne',	sound = 'fm-acrd',	style = 0 }
 flightMode[17] = { name = 'LQG Acro',	sound = 'fm-acr',	style = 0 }
