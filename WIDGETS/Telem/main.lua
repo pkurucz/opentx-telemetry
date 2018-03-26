@@ -219,8 +219,7 @@ function batt:read()
     end
 
     local v = 0
-    local highVolt = self.volts > 4.22 * self.cells
-    if highVolt then
+    if self.volts > 4.22 * self.cells then -- High Volt
         v = self.cellv - 0.15
     else
         v = self.cellv
@@ -279,9 +278,8 @@ end
 
 local function drawBattery(x, y)
     batt:read()
-    lcd.drawNumber(x+10, y, batt.fuel, SMLSIZE)
-    lcd.drawText(getLastPos(), y, '%', SMLSIZE)
 
+    lcd.drawText(x+10, y, batt.fuel .. '%', SMLSIZE)
     lcd.drawFilledRectangle(x+13, y+9, 5, 2, 0)
     lcd.drawRectangle(x+10, y+11, 11, 40)
 
@@ -301,11 +299,10 @@ local function drawBattery(x, y)
     end
 
     if draw.frame == 1 then
-        lcd.drawText(x, y+54, batt.cells..'S', 0)
+        lcd.drawText(x, y+54, batt.cells .. 'S', 0)
         lcd.drawNumber(getLastPos()+1, y+54, batt.cellv*100, style)
     elseif draw.frame == 2 then
         lcd.drawNumber(x+5, y+54, batt.volts*100, style)
-        if highVolt then lcd.drawText(getLastPos(), y+54, 'H', 0) end
     end
     lcd.drawText(getLastPos(), y+54, 'V', 0)
 end
@@ -335,21 +332,22 @@ local function drawRSSI(x, y)
     drawBitmap(x+4, y+3, pixmap)
     lcd.drawNumber(x+6, y, percent * 10, PREC1)
     lcd.drawText(getLastPos(), y, '%', 0)
-    lcd.drawText(x+6, y+54, rssi..'dB', 0)
+    lcd.drawText(x+6, y+54, rssi .. 'dB', 0)
 end
 
 
 local function drawGPS(x, y)
+    local fmt = '% .6f'
     local gps = getValue('GPS')
-    if type(gps) == 'table' then
+    if rssi > 0 and type(gps) == 'table' then
         post.lat = gps.lat
         post.lon = gps.lon
     end
-    lcd.drawFilledRectangle(x+1, y+1, 26, 17, SOLID)
-    lcd.drawText(x+7, y+3, 'Lat', SMLSIZE + INVERS)
-    lcd.drawText(x+7, y+10, 'Lon', SMLSIZE + INVERS)
-    lcd.drawText(x+30, y+3, post.lat, SMLSIZE)
-    lcd.drawText(x+30, y+10, post.lon, SMLSIZE)
+    lcd.drawFilledRectangle(x+1, y+1, 18, 17, SOLID)
+    lcd.drawText(x+3, y+3,  'Lat', SMLSIZE + INVERS)
+    lcd.drawText(x+3, y+10, 'Lon', SMLSIZE + INVERS)
+    lcd.drawText(x+21, y+3,  string.format(fmt, post.lat), SMLSIZE)
+    lcd.drawText(x+21, y+10, string.format(fmt, post.lon), SMLSIZE)
 end
 
 
@@ -434,12 +432,14 @@ local function drawTimer(x, y)
     else
         timer = 0
     end
+    local xx = 30
     if timer < 0 then
         style = style + INVERS
+        xx = 36
     end
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Tmr', MIDSIZE + INVERS)
-    lcd.drawTimer(x+30, y+4, timer, style)
+    lcd.drawTimer(x+xx, y+4, timer, style)
 end
 
 
