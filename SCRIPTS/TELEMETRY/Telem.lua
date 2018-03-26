@@ -34,14 +34,18 @@ local options = {
 
 local battMin, battMax, imperial, language, voice = getGeneralSettings()
 local version, radio, maj, min, rev = getVersion() 
-local rssi		= 0
-local prevMode		= 0
-local displayWidth	= 212
-local displayHeight	= 64
-local widgetWidthSingle	= 35
-local widgetWidthMulti	= 0
-local widget		= {}
-local flightMode	= {}
+
+local UNIT_VOLTS = 1
+local UNIT_AMPS  = 2
+
+local rssi = 0
+local displayWidth = 212
+local displayHeight = 64
+local widgetWidthSingle = 35
+local widgetWidthMulti = 0
+local widget = {}
+
+local flightMode = {}
 flightMode[-2] = { name = 'Invalid',				style = BLINK }
 flightMode[-1] = { name = 'No Telem',				style = BLINK }
 flightMode[ 0] = { name = 'Manual',	sound = 'fm-mnl',	style = 0 }
@@ -105,7 +109,7 @@ local function drawBitmap(x, y, image)
     if radio == 'x10' or radio == 'x12s' then
         return lcd.drawBitmap(image, x, y)
     else
-	return lcd.drawPixmap(x, y, image)
+        return lcd.drawPixmap(x, y, image)
     end
 end
 
@@ -131,21 +135,23 @@ function Timer:new(o)
 end
 
 
-local post = Timer:new({ rssi=0, altd=0, gspd=0, lat=0, lon=0, batt=0, cell=0, curr=0 })
+local post = Timer:new({ rssi=0, altd=0, gspd=0, lat=0, lon=0, mode=0, batt=0, cell=0, curr=0 })
 function post:refresh(ticks)
     self.ticks = self.ticks + (getTime() - self.time)
     if self.ticks >= ticks then
         self.ticks = 0
-	if self.rssi == 0 and rssi > 0 then -- reset
-	    self.altd = 0
-	    self.gspd = 0
-	    self.lat  = 0
-	    self.lon  = 0
-	    self.batt = 35
-	    self.cell = 5
-	    self.curr = 0
-	end
-	self.rssi = rssi
+        if self.rssi == 0 and rssi > 0 then -- reset
+            self.altd = 0
+            self.gspd = 0
+            self.lat  = 0
+            self.lon  = 0
+            self.mode = 0
+            self.batt = 35
+            self.cell = 5
+            self.curr = 0
+            model.resetTimer(0)
+        end
+        self.rssi = rssi
     end
     self.time = getTime()
     return self
@@ -185,7 +191,7 @@ function curr:refresh(ticks)
 end
 
 
-local batt = Timer:new({ cells=battCells, cellv=0, volts=0, fuel=0, perc=0 })
+local batt = Timer:new({ cells=battCells, cellv=0, volts=0, fuel=0, perc=111 })
 function batt:read()
     self.cellv = getValue('Cels')
     if type(self.cellv) == 'table' then -- FrSky FLVSS
@@ -220,14 +226,14 @@ function batt:read()
         v = self.cellv
     end
 
-    if v > 0 and self.cellv < post.cell then
+    if post.rssi == 0 then -- No Telemetry
+        self.fuel = 0
+        self.perc = 111
+        self.cellv = post.cell
+        self.volts = post.batt
+    elseif v > 0 and self.cellv < post.cell then
         post.cell = self.cellv
         post.batt = self.volts
-    elseif rssi == 0 then -- No Telemetry
-        self.cellv = post.cell
-	self.volts = post.batt
-	self.fuel = 0
-	self.perc = 0
     end
 
     if     v >  4.2		then v = 100
@@ -248,18 +254,20 @@ end
 
 function batt:refresh(ticks)
     self:read()
-    if rssi > 0 and self.fuel < self.perc - 10 then 
+    if post.rssi > 0 and self.fuel < self.perc - 10 then 
         self.ticks = self.ticks + (getTime() - self.time)
         if self.ticks >= ticks then
             self.ticks = 0
             self.perc = round(self.fuel * 0.1) * 10
-            if self.perc <= 10 then 
-        	playFile('batcrit.wav') 
+            if self.volts > 0.5 then
+                if self.perc <= 10 then 
+                    playFile('batcrit.wav') 
+                end
+                if self.cellv < minVolt then
+                    playFile('battcns.wav')
+                end
+                playNumber(round(self.volts*10), UNIT_VOLTS, PREC1)
             end
-            if self.cellv < minVolt and self.volts > 0.5 then
-        	playFile('battcns.wav')
-            end
-            playNumber(self.perc, UNIT_PERCENT)
         end
         self.time = getTime()
     end
@@ -327,7 +335,7 @@ local function drawRSSI(x, y)
     drawBitmap(x+4, y+3, pixmap)
     lcd.drawNumber(x+6, y, percent * 10, PREC1)
     lcd.drawText(getLastPos(), y, '%', 0)
-    lcd.drawText(x+6, y+54, rssi .. 'dB', 0)
+    lcd.drawText(x+6, y+54, rssi..'dB', 0)
 end
 
 
@@ -347,23 +355,23 @@ end
 
 local function drawMode(x, y)
     local m = math.floor(getValue('RPM') % 100)
-    if rssi == 0 and m == 0 then m = -1 end -- No Telemetry
+    if post.rssi == 0 and m == 0 then m = -1 end -- No Telemetry
     if not flightMode[m] then m = -2 end -- Invalid Flight Mode
     if not LQG and m == 17 then m = 19 end -- LQG FailSafe kludge
     lcd.drawText(x+2, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
-    if prevMode ~= m and flightMode[m].sound then
-        prevMode = m
+    if post.rssi > 0 and m ~= post.mode and flightMode[m].sound then
         playFile(flightMode[m].sound .. '.wav')
+        post.mode = m
     end
 end
 
 
 local function drawCurr(x, y)
     local curr = getValue('Curr')
-    if curr > post.curr then
-	post.curr = curr
-    elseif rssi == 0 then
+    if rssi == 0 then -- No Telemetry
         curr = post.curr
+    elseif curr > post.curr then
+        post.curr = curr
     end
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Cur', MIDSIZE + INVERS)
@@ -383,10 +391,10 @@ end
 
 local function drawAltitude(x, y)
     local altitude = getValue(Altd)
-    if altitude > post.altd then
-	post.altd = altitude
-    elseif rssi == 0 then
+    if rssi == 0 then -- No Telemetry
         altitude = post.altd
+    elseif altitude > post.altd then
+        post.altd = altitude
     end
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Alt', MIDSIZE + INVERS)
@@ -397,10 +405,10 @@ end
 
 local function drawSpeed(x, y)
     local speed = getValue('GSpd') * 3.6
-    if speed > post.gspd then
-	post.gspd = speed
-    elseif rssi == 0 then
+    if rssi == 0 then -- No Telemetry
         speed = post.gspd
+    elseif speed > post.gspd then
+        post.gspd = speed
     end
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Spd', MIDSIZE + INVERS)
@@ -465,8 +473,8 @@ local function create(zone, options)
 
     if radio == 'x10' or radio == 'x12s' then
         for name, path in pairs(image) do
-	    image[name] = Bitmap.open(path)
-	end
+            image[name] = Bitmap.open(path)
+        end
     end
 
     return { zone=zone, options=options }
