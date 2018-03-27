@@ -391,7 +391,14 @@ end
 local function drawAltitude(x, y)
     local altitude = getValue(Altd)
     local unit = 'm'
+<<<<<<< HEAD
     if imperial ~= 0 then unit = 'f' end
+=======
+    if imperial ~= 0 then
+	altitude = altitude * 3.28
+	unit = 'f'
+    end
+>>>>>>> 96bda45d280bc3cb5640f97d6157737ef9d6c1ae
     if rssi == 0 then -- No Telemetry
         altitude = post.altd
     elseif altitude > post.altd then
