@@ -280,17 +280,17 @@ local function drawBattery(x, y)
     batt:read()
 
     lcd.drawText(x+10, y, batt.fuel .. '%', SMLSIZE)
-    lcd.drawFilledRectangle(x+13, y+9, 5, 2, 0)
-    lcd.drawRectangle(x+10, y+11, 11, 40)
+    lcd.drawFilledRectangle(x+12, y+9, 7, 2, 0)
+    lcd.drawRectangle(x+9, y+11, 13, 40)
 
     local myPxHeight = math.floor(batt.fuel * 0.37)
     local myPxY = 13 + 37 - myPxHeight
     if batt.fuel > 0 then
-        lcd.drawFilledRectangle(x+11, myPxY, 9, myPxHeight, 0)
+        lcd.drawFilledRectangle(x+10, myPxY, 11, myPxHeight, 0)
     end
 
     for i=36, 1, -2 do
-        lcd.drawLine(x+12, y+12+i, x+18, y+12+i, SOLID, GREY_DEFAULT)
+        lcd.drawLine(x+11, y+12+i, x+19, y+12+i, SOLID, GREY_DEFAULT)
     end
 
     local style = LEFT + PREC2
@@ -347,7 +347,7 @@ local function drawGPS(x, y)
     lcd.drawText(x+3, y+3,  'Lat', SMLSIZE + INVERS)
     lcd.drawText(x+3, y+10, 'Lon', SMLSIZE + INVERS)
     lcd.drawText(x+21, y+3,  string.format(fmt, post.lat), SMLSIZE)
-    lcd.drawText(x+21, y+10, string.format(fmt, post.lon), SMLSIZE)
+    lcd.drawText(x+21, y+11, string.format(fmt, post.lon), SMLSIZE)
 end
 
 
