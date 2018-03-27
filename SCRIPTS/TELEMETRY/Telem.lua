@@ -406,7 +406,7 @@ end
 
 local function drawSpeed(x, y)
     local speed = getValue('GSpd')
-    local unit = 'knots'
+    local unit = 'kts'
     if imperial == 0 then
 	speed = round(speed*1.851*2)
 	unit = 'kmh'
