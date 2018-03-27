@@ -373,8 +373,8 @@ local function drawCurr(x, y)
     end
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Cur', MIDSIZE + INVERS)
-    lcd.drawNumber(x+30, y+4, curr, MIDSIZE + LEFT)
-    lcd.drawText(getLastPos(), y+7, 'Amp', 0)
+    lcd.drawNumber(x+30, y+4, curr*10, MIDSIZE + LEFT + PREC1)
+    lcd.drawText(getLastPos(), y+7, 'A', 0)
 end
 
 
