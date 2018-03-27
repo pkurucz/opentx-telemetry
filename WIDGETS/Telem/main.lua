@@ -330,8 +330,7 @@ local function drawRSSI(x, y)
     end
 
     drawBitmap(x+4, y+3, pixmap)
-    lcd.drawNumber(x+6, y, percent * 10, PREC1)
-    lcd.drawText(getLastPos(), y, '%', 0)
+    lcd.drawText(x+9, y, round(percent*0.5+0.5*(percent)) .. '%', 0)
     lcd.drawText(x+6, y+54, rssi .. 'dB', 0)
 end
 
