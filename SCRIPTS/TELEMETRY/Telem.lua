@@ -34,6 +34,7 @@ local options = {
 
 local battMin, battMax, imperial, language, voice = getGeneralSettings()
 local version, radio, maj, min, rev = getVersion() 
+local unit = {}
 
 local UNIT_VOLTS = 1
 local UNIT_AMPS  = 2
@@ -380,7 +381,7 @@ end
 local function drawDist(x, y)
     local dist = getValue('Dist')
     local unit = 'm'
-    if imperial ~= 0 then unit = 'f' end
+    if imperial ~= 0 then unit = 'ft' end
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Dst', MIDSIZE + INVERS)
     lcd.drawNumber(x+30, y+4, dist, MIDSIZE + LEFT)
@@ -391,7 +392,7 @@ end
 local function drawAltitude(x, y)
     local altitude = getValue(Altd)
     local unit = 'm'
-    if imperial ~= 0 then unit = 'f' end
+    if imperial ~= 0 then unit = 'ft' end
     if rssi == 0 then -- No Telemetry
         altitude = post.altd
     elseif altitude > post.altd then
@@ -408,11 +409,11 @@ local function drawSpeed(x, y)
     local speed = getValue('GSpd')
     local unit = 'kts'
     if imperial == 0 then
-	speed = round(speed*1.851*2)
-	unit = 'kmh'
+        speed = round(speed*1.851*2)
+        unit = 'kmh'
     else
-	speed = round(speed*1.149)
-	unit = 'mph'
+        speed = round(speed*1.149)
+        unit = 'mph'
     end
     if rssi == 0 then -- No Telemetry
         speed = post.gspd
