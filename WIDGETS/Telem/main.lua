@@ -388,6 +388,11 @@ end
 
 local function drawAltitude(x, y)
     local altitude = getValue(Altd)
+    local unit = 'm'
+    if imperial ~= 0 then
+	altitude = altitude * 3.28
+	unit = 'f'
+    end
     if rssi == 0 then -- No Telemetry
         altitude = post.altd
     elseif altitude > post.altd then
@@ -396,12 +401,20 @@ local function drawAltitude(x, y)
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Alt', MIDSIZE + INVERS)
     lcd.drawNumber(x+30, y+4, altitude, MIDSIZE + LEFT)
-    lcd.drawText(getLastPos(), y+7, 'm', 0)
+    lcd.drawText(getLastPos(), y+7, unit, 0)
 end
 
 
 local function drawSpeed(x, y)
-    local speed = getValue('GSpd') * 3.6
+    local speed = getValue('GSpd')
+    local unit = 'knots'
+    if imperial == 0 then
+	speed = round(speed*1.851*2)
+	unit = 'kmh'
+    else
+	speed = round(speed*1.149)
+	unit = 'mph'
+    end
     if rssi == 0 then -- No Telemetry
         speed = post.gspd
     elseif speed > post.gspd then
@@ -410,7 +423,7 @@ local function drawSpeed(x, y)
     lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
     lcd.drawText(x+2, y+4, 'Spd', MIDSIZE + INVERS)
     lcd.drawNumber(x+30, y+4, speed, MIDSIZE + LEFT)
-    lcd.drawText(getLastPos(), y+7, 'kmh', 0)
+    lcd.drawText(getLastPos(), y+7, unit, 0)
 end
 
 
