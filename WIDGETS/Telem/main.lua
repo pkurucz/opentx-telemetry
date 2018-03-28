@@ -337,8 +337,8 @@ local function drawGPS(x, y)
     lcd.drawFilledRectangle(x+1, y+1, 18, 17, SOLID)
     lcd.drawText(x+3, y+3,  'Lat', SMLSIZE + INVERS)
     lcd.drawText(x+3, y+10, 'Lon', SMLSIZE + INVERS)
-    lcd.drawText(x+21, y+3,  string.format(fmt, post.lat), SMLSIZE)
-    lcd.drawText(x+21, y+11, string.format(fmt, post.lon), SMLSIZE)
+    lcd.drawText(x+69, y+3,  string.format(fmt, post.lat), SMLSIZE + RIGHT)
+    lcd.drawText(x+69, y+11, string.format(fmt, post.lon), SMLSIZE + RIGHT)
 end
 
 
@@ -471,8 +471,7 @@ local function create(zone, options)
         end
     end
 
-    widgetWidthMulti = LCD_W - (colsSingle * widgetWidthSingle)
-    widgetWidthMulti = widgetWidthMulti / colsMulti
+    widgetWidthMulti = (LCD_W - (colsSingle * widgetWidthSingle)) / colsMulti
 
     return { zone=zone, options=options }
 end
