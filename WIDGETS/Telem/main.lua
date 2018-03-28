@@ -34,7 +34,6 @@ local options = {
 
 local battMin, battMax, imperial, language, voice = getGeneralSettings()
 local version, radio, maj, min, rev = getVersion() 
-local unit = {}
 
 local UNIT_VOLTS = 1
 local UNIT_AMPS  = 2
