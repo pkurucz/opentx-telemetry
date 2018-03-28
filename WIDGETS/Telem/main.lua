@@ -310,9 +310,9 @@ local function drawRSSI(x, y)
 	post.perc = 0
     end
     local flags = FORCE
-    for i=1, 10 do
+    for i=1, #bars do
         if i > math.ceil(post.perc * 0.1) then flags = GREY_DEFAULT end
-	for j=1, 3 do
+	for j=1, #bars[i] do
 	    local x = x + bars[i][j][1]
 	    local y = y + bars[i][j][2]
 	    local l = x + bars[i][j][3]
