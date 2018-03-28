@@ -40,8 +40,6 @@ local UNIT_VOLTS = 1
 local UNIT_AMPS  = 2
 
 local rssi = 0
-local displayWidth = 212
-local displayHeight = 64
 local widgetWidthSingle = 35
 local widgetWidthMulti = 0
 local widget = {}
@@ -70,49 +68,42 @@ flightMode[17] = { name = 'LQG Acro',	sound = 'fm-acr',	style = 0 }
 flightMode[18] = { name = 'LQG Level',	sound = 'fm-lvl',	style = 0 }
 flightMode[19] = { name = 'Fail Safe',	sound = 'fm-fail',	style = BLINK }
 
-local image = {}
-image.altitude = '/IMAGES/TELEM/hgt.bmp'
-image.compass  = '/IMAGES/TELEM/compass.bmp'
-image.dist     = '/IMAGES/TELEM/dist.bmp'
-image.mode     = '/IMAGES/TELEM/fm.bmp'
-image.speed    = '/IMAGES/TELEM/speed.bmp'
-image.timer    = '/IMAGES/TELEM/timer_1.bmp'
-image.rssi00   = '/IMAGES/TELEM/RSSIh00.bmp'
-image.rssi01   = '/IMAGES/TELEM/RSSIh01.bmp'
-image.rssi02   = '/IMAGES/TELEM/RSSIh02.bmp'
-image.rssi03   = '/IMAGES/TELEM/RSSIh03.bmp'
-image.rssi04   = '/IMAGES/TELEM/RSSIh04.bmp'
-image.rssi05   = '/IMAGES/TELEM/RSSIh05.bmp'
-image.rssi06   = '/IMAGES/TELEM/RSSIh06.bmp'
-image.rssi07   = '/IMAGES/TELEM/RSSIh07.bmp'
-image.rssi08   = '/IMAGES/TELEM/RSSIh08.bmp'
-image.rssi09   = '/IMAGES/TELEM/RSSIh09.bmp'
-image.rssi10   = '/IMAGES/TELEM/RSSIh10.bmp'
-image.sat0     = '/IMAGES/TELEM/sat0.bmp'
-image.sat1     = '/IMAGES/TELEM/sat1.bmp'
-image.sat2     = '/IMAGES/TELEM/sat2.bmp'
-image.sat3     = '/IMAGES/TELEM/sat3.bmp'
-image.gps0     = '/IMAGES/TELEM/gps_0.bmp'
-image.gps1     = '/IMAGES/TELEM/gps_1.bmp'
-image.gps2     = '/IMAGES/TELEM/gps_2.bmp'
-image.gps3     = '/IMAGES/TELEM/gps_3.bmp'
-image.gps4     = '/IMAGES/TELEM/gps_4.bmp'
-image.gps5     = '/IMAGES/TELEM/gps_5.bmp'
-image.gps6     = '/IMAGES/TELEM/gps_6.bmp'
-
+local bars = {}
+for i=1, 10 do bars[i] = {} end
+bars[10][3] = {  4, 10, 25 }
+bars[10][2] = {  4, 11, 25 }
+bars[10][1] = {  5, 12, 23 }
+bars[ 9][3] = {  5, 14, 23 }
+bars[ 9][2] = {  5, 15, 23 }
+bars[ 9][1] = {  6, 16, 21 }
+bars[ 8][3] = {  6, 18, 21 }
+bars[ 8][2] = {  6, 19, 21 }
+bars[ 8][1] = {  7, 20, 19 }
+bars[ 7][3] = {  7, 22, 19 }
+bars[ 7][2] = {  7, 23, 19 }
+bars[ 7][1] = {  8, 24, 17 }
+bars[ 6][3] = {  8, 26, 17 }
+bars[ 6][2] = {  8, 27, 17 }
+bars[ 6][1] = {  9, 28, 15 }
+bars[ 5][3] = {  9, 30, 15 }
+bars[ 5][2] = {  9, 31, 15 }
+bars[ 5][1] = { 10, 32, 13 }
+bars[ 4][3] = { 10, 34, 13 }
+bars[ 4][2] = { 10, 35, 13 }
+bars[ 4][1] = { 11, 36, 11 }
+bars[ 3][3] = { 11, 38, 11 }
+bars[ 3][2] = { 11, 39, 11 }
+bars[ 3][1] = { 12, 40,  9 }
+bars[ 2][3] = { 12, 42,  9 }
+bars[ 2][2] = { 12, 43,  9 }
+bars[ 2][1] = { 13, 44,  7 }
+bars[ 1][3] = { 13, 46,  7 }
+bars[ 1][2] = { 13, 47,  7 }
+bars[ 1][1] = { 14, 48,  5 }
 
 -- functions  -----------------------------------------------------------------
 
 local getLastPos = lcd.getLastRightPos
-
-
-local function drawBitmap(x, y, image)
-    if radio == 'x10' or radio == 'x12s' then
-        return lcd.drawBitmap(image, x, y)
-    else
-        return lcd.drawPixmap(x, y, image)
-    end
-end
 
 
 local function round(n, p)
@@ -136,12 +127,13 @@ function Timer:new(o)
 end
 
 
-local post = Timer:new({ rssi=0, altd=0, gspd=0, lat=0, lon=0, mode=0, batt=0, cell=0, curr=0 })
+local post = Timer:new({ rssi=0, perc=0, altd=0, gspd=0, lat=0, lon=0, mode=0, batt=0, cell=0, curr=0 })
 function post:refresh(ticks)
     self.ticks = self.ticks + (getTime() - self.time)
     if self.ticks >= ticks then
         self.ticks = 0
         if self.rssi == 0 and rssi > 0 then -- reset
+            self.perc = 0
             self.altd = 0
             self.gspd = 0
             self.lat  = 0
@@ -311,28 +303,27 @@ end
 
 local function drawRSSI(x, y)
     rssi = getRSSI()
-        
-    local percent = 0
     if rssi > 38 then
-        percent = (math.log(rssi - 28, 10) - 1) / (math.log(72, 10) - 1) * 100
+        post.perc = round(post.perc * 0.5 + 0.5 * (((math.log(rssi - 28, 10) - 1) / (math.log(72, 10) - 1)) * 100))
+	if post.perc > 100 then post.perc = 100 end
+    else
+	post.perc = 0
     end
-
-    local pixmap = image.rssi00
-    if     percent > 90 then pixmap = image.rssi10
-    elseif percent > 80 then pixmap = image.rssi09
-    elseif percent > 70 then pixmap = image.rssi08
-    elseif percent > 60 then pixmap = image.rssi07
-    elseif percent > 50 then pixmap = image.rssi06
-    elseif percent > 40 then pixmap = image.rssi05
-    elseif percent > 30 then pixmap = image.rssi04
-    elseif percent > 20 then pixmap = image.rssi03
-    elseif percent > 10 then pixmap = image.rssi02
-    elseif percent >  0 then pixmap = image.rssi01
+    local flags = FORCE
+    for i=1, 10 do
+        if i > math.ceil(post.perc * 0.1) then flags = GREY_DEFAULT end
+	for j=1, 3 do
+	    local x = x + bars[i][j][1]
+	    local y = y + bars[i][j][2]
+	    local l = x + bars[i][j][3]
+	    if j == 1 and i ~= 1 and flags == FORCE then
+		lcd.drawLine(x-1, y, l+1, y, SOLID, GREY_DEFAULT)
+	    end
+	    lcd.drawLine(x, y, l, y, SOLID, flags)
+	end
     end
-
-    drawBitmap(x+4, y+3, pixmap)
-    lcd.drawText(x+9, y, round(percent*0.5+0.5*(percent)) .. '%', 0)
-    lcd.drawText(x+6, y+54, rssi .. 'dB', 0)
+    lcd.drawText(x+10, y, post.perc .. '%', 0)
+    lcd.drawText(x+8, y+54, rssi .. 'dB', 0)
 end
 
 
@@ -480,14 +471,8 @@ local function create(zone, options)
         end
     end
 
-    widgetWidthMulti = displayWidth - (colsSingle * widgetWidthSingle)
+    widgetWidthMulti = LCD_W - (colsSingle * widgetWidthSingle)
     widgetWidthMulti = widgetWidthMulti / colsMulti
-
-    if radio == 'x10' or radio == 'x12s' then
-        for name, path in pairs(image) do
-            image[name] = Bitmap.open(path)
-        end
-    end
 
     return { zone=zone, options=options }
 end
@@ -523,7 +508,7 @@ local function refresh(zone)
         for row=1, #layout[col] do
             lcd.drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
             widget[layout[col][row]](x+1, y+1) --call widget
-            y = y + math.floor(displayHeight / #layout[col])
+            y = y + math.floor(LCD_H / #layout[col])
         end
 
         y = -1

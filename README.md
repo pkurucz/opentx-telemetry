@@ -25,8 +25,7 @@ only provides a subset of the original widgets.
 
 ## Taranis Usage
 * edit constants in the `settings` section to meet your needs
-* copy `/IMAGES/` and `/SCRIPTS/` folders to the same folders on the Taranis
-  SD card
+* copy `/SCRIPTS/TELEMETRY/Telem.lua` to the Taranis SD card
 * select _Script_ **Telem** for one of the _Screens_ on the _Display_ page of your
   _OpenTX model_
 
