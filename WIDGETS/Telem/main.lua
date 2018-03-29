@@ -186,15 +186,16 @@ end
 local batt = Timer:new({ cells=battCells, cellv=0, volts=0, fuel=0, perc=111 })
 function batt:read()
     self.cellv = getValue('Cels')
-    if type(self.cellv) == 'table' then -- FrSky FLVSS
+    if type(self.cellv) == 'table' then -- FrSky FLVSS, dRonin et al
         self.cells = 0
+        self.volts = 0
         for i, v in ipairs(self.cellv) do
             self.volts = self.volts + v
             self.cells = self.cells + 1
         end
     elseif self.cellv == 0 then
         self.volts = getValue('VFAS')
-    else -- dRonin et al
+    else -- Cels not a table
         self.volts = self.cellv
     end
 
