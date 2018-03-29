@@ -22,7 +22,6 @@ local layout	= {	-- screen widgets
                     { 'mode', 'speed', 'timer' },
                     { 'rssi' },
                   }
-local LQG	= false	-- set to `true` for LQG builds, otherwise `false`
 
 
 -- module globals  -------------------------------------------------------------
@@ -354,7 +353,6 @@ local function drawMode(x, y)
     m = math.floor(m % 100)
     if rssi == 0 and batt.fuel == 0 and m == 0 then m = -1 end -- No Telemetry
     if not flightMode[m] then m = -2 end -- Invalid Flight Mode
-    if not LQG and m == 17 then m = 19 end -- LQG FailSafe kludge
     lcd.drawText(x+2, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style + a)
     if post.rssi > 0 and batt.fuel > 0 and m > 0 then
 	if m ~= post.mode and flightMode[m].sound then
