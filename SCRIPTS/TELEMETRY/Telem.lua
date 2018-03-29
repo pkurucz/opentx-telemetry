@@ -138,6 +138,7 @@ function post:refresh(ticks)
             self.lat  = 0
             self.lon  = 0
             self.mode = 0
+            self.armd = INVERS
             self.batt = 35
             self.cell = 5
             self.curr = 0
@@ -218,7 +219,7 @@ function batt:read()
         v = self.cellv
     end
 
-    if post.rssi == 0 then -- No Telemetry
+    if post.rssi == 0 and v == 0 then -- No Telemetry
         self.fuel = 0
         self.perc = 111
         self.cellv = post.cell
@@ -343,21 +344,38 @@ end
 
 
 local function drawMode(x, y)
-    local m = math.floor(getValue('RPM') % 100)
-    if post.rssi == 0 and m == 0 then m = -1 end -- No Telemetry
+    local m = getValue('RPM')
+    local a = math.floor(m * 0.01)
+    if a == 1 then  -- disarmed
+	a = INVERS
+    elseif a == 2 then -- armed
+	a = 0
+    end
+    m = math.floor(m % 100)
+    if rssi == 0 and batt.fuel == 0 and m == 0 then m = -1 end -- No Telemetry
     if not flightMode[m] then m = -2 end -- Invalid Flight Mode
     if not LQG and m == 17 then m = 19 end -- LQG FailSafe kludge
-    lcd.drawText(x+2, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style)
-    if post.rssi > 0 and m ~= post.mode and flightMode[m].sound then
-        playFile(flightMode[m].sound .. '.wav')
-        post.mode = m
+    lcd.drawText(x+2, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style + a)
+    if post.rssi > 0 and batt.fuel > 0 and m > 0 then
+	if m ~= post.mode and flightMode[m].sound then
+	    playFile(flightMode[m].sound .. '.wav')
+	    post.mode = m
+	end
+	if a ~= post.armd then
+	    if a == 0 then
+	        playFile('armed.wav')
+	    elseif a == INVERS then
+	        playFile('disa.wav')
+	    end
+	    post.armd = a
+	end
     end
 end
 
 
 local function drawCurr(x, y)
     local curr = getValue('Curr')
-    if rssi == 0 then -- No Telemetry
+    if rssi == 0 and curr == 0 then -- No Telemetry
         curr = post.curr
     elseif curr > post.curr then
         post.curr = curr
@@ -384,7 +402,7 @@ local function drawAltitude(x, y)
     local altitude = getValue(Altd)
     local unit = 'm'
     if imperial ~= 0 then unit = 'ft' end
-    if rssi == 0 then -- No Telemetry
+    if rssi == 0 and altitude == 0 then -- No Telemetry
         altitude = post.altd
     elseif altitude > post.altd then
         post.altd = altitude
@@ -406,7 +424,7 @@ local function drawSpeed(x, y)
         speed = round(speed*1.149)
         unit = 'mph'
     end
-    if rssi == 0 then -- No Telemetry
+    if rssi == 0 and speed == 0 then -- No Telemetry
         speed = post.gspd
     elseif speed > post.gspd then
         post.gspd = speed
