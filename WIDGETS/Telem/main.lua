@@ -188,6 +188,7 @@ function batt:read()
     self.cellv = getValue('Cels')
     if type(self.cellv) == 'table' then -- FrSky FLVSS
         self.cells = 0
+        self.volts = 0
         for i, v in ipairs(self.cellv) do
             self.volts = self.volts + v
             self.cells = self.cells + 1
