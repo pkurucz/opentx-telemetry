@@ -26,14 +26,14 @@ local layout	= {	-- screen widgets
 
 -- module globals  -------------------------------------------------------------
 
-local options = {
-                  { 'Altitude', SOURCE, 1 },
-                  { 'Cells', VALUE, 4 },
-                }
-
+local options = {} 
 local battMin, battMax, imperial, language, voice = getGeneralSettings()
 local version, radio, maj, min, rev = getVersion() 
 
+local GREY = GREY_DEFAULT or GREY or 0
+local LINE_COLOR = LINE_COLOR or 0
+local TEXT_COLOR = TEXT_COLOR or 0
+local TEXT_BGCOLOR = TEXT_BGCOLOR or 0
 local UNIT_VOLTS = 1
 local UNIT_AMPS  = 2
 
@@ -272,18 +272,18 @@ end
 local function drawBattery(x, y)
     batt:read()
 
-    lcd.drawText(x+10, y, batt.fuel .. '%', SMLSIZE)
-    lcd.drawFilledRectangle(x+12, y+9, 7, 2, 0)
-    lcd.drawRectangle(x+9, y+11, 13, 40)
+    lcd.drawText(x+10, y, batt.fuel .. '%', TEXT_COLOR + SMLSIZE)
+    lcd.drawFilledRectangle(x+12, y+9, 7, 2, LINE_COLOR)
+    lcd.drawRectangle(x+9, y+11, 13, 40, LINE_COLOR)
 
     local myPxHeight = math.floor(batt.fuel * 0.37)
     local myPxY = 13 + 37 - myPxHeight
     if batt.fuel > 0 then
-        lcd.drawFilledRectangle(x+10, myPxY, 11, myPxHeight, 0)
+        lcd.drawFilledRectangle(x+10, myPxY, 11, myPxHeight, LINE_COLOR)
     end
 
     for i=36, 1, -2 do
-        lcd.drawLine(x+11, y+12+i, x+19, y+12+i, SOLID, GREY_DEFAULT)
+        lcd.drawLine(x+11, y+12+i, x+19, y+12+i, SOLID, GREY)
     end
 
     local style = LEFT + PREC2
@@ -292,12 +292,12 @@ local function drawBattery(x, y)
     end
 
     if draw.frame == 1 then
-        lcd.drawText(x, y+54, batt.cells .. 'S', 0)
-        lcd.drawNumber(getLastPos()+1, y+54, batt.cellv*100, style)
+        lcd.drawText(x, y+54, batt.cells .. 'S', TEXT_COLOR)
+        lcd.drawNumber(getLastPos()+1, y+54, batt.cellv*100, TEXT_COLOR + style)
     elseif draw.frame == 2 then
-        lcd.drawNumber(x+5, y+54, batt.volts*100, style)
+        lcd.drawNumber(x+5, y+54, batt.volts*100, TEXT_COLOR + style)
     end
-    lcd.drawText(getLastPos(), y+54, 'V', 0)
+    lcd.drawText(getLastPos(), y+54, 'V', TEXT_COLOR)
 end
 
 
@@ -309,21 +309,21 @@ local function drawRSSI(x, y)
     else
 	post.perc = 0
     end
-    local flags = FORCE
+    local flags = LINE_COLOR or FORCE or 0
     for i=1, #bars do
-        if i > math.ceil(post.perc * 0.1) then flags = GREY_DEFAULT end
+        if i > math.ceil(post.perc * 0.1) then flags = GREY end
 	for j=1, #bars[i] do
 	    local x = x + bars[i][j][1]
 	    local y = y + bars[i][j][2]
 	    local l = x + bars[i][j][3]
-	    if j == 1 and i ~= 1 and flags == FORCE then
-		lcd.drawLine(x-1, y, l+1, y, SOLID, GREY_DEFAULT)
+	    if j == 1 and i ~= 1 and flags ~= GREY then
+		lcd.drawLine(x-1, y, l+1, y, SOLID, GREY)
 	    end
 	    lcd.drawLine(x, y, l, y, SOLID, flags)
 	end
     end
-    lcd.drawText(x+10, y, post.perc .. '%', 0)
-    lcd.drawText(x+8, y+54, rssi .. 'dB', 0)
+    lcd.drawText(x+10, y, post.perc .. '%', TEXT_COLOR)
+    lcd.drawText(x+8, y+54, rssi .. 'dB', TEXT_COLOR)
 end
 
 
@@ -334,11 +334,11 @@ local function drawGPS(x, y)
         post.lat = gps.lat
         post.lon = gps.lon
     end
-    lcd.drawFilledRectangle(x+1, y+1, 18, 17, SOLID)
-    lcd.drawText(x+3, y+3,  'Lat', SMLSIZE + INVERS)
-    lcd.drawText(x+3, y+10, 'Lon', SMLSIZE + INVERS)
-    lcd.drawText(x+69, y+3,  string.format(fmt, post.lat), SMLSIZE + RIGHT)
-    lcd.drawText(x+69, y+11, string.format(fmt, post.lon), SMLSIZE + RIGHT)
+    lcd.drawFilledRectangle(x+1, y+1, 18, 17, LINE_COLOR + SOLID)
+    lcd.drawText(x+3, y+3,  'Lat', TEXT_COLOR + SMLSIZE + INVERS)
+    lcd.drawText(x+3, y+10, 'Lon', TEXT_COLOR + SMLSIZE + INVERS)
+    lcd.drawText(x+69, y+3,  string.format(fmt, post.lat), TEXT_COLOR + SMLSIZE + RIGHT)
+    lcd.drawText(x+69, y+11, string.format(fmt, post.lon), TEXT_COLOR + SMLSIZE + RIGHT)
 end
 
 
@@ -353,7 +353,7 @@ local function drawMode(x, y)
     m = math.floor(m % 100)
     if rssi == 0 and batt.fuel == 0 and m == 0 then m = -1 end -- No Telemetry
     if not flightMode[m] then m = -2 end -- Invalid Flight Mode
-    lcd.drawText(x+2, y+4, flightMode[m].name, MIDSIZE + flightMode[m].style + a)
+    lcd.drawText(x+2, y+4, flightMode[m].name, TEXT_COLOR + MIDSIZE + flightMode[m].style + a)
     if post.rssi > 0 and batt.fuel > 0 and m > 0 then
 	if m ~= post.mode and flightMode[m].sound then
 	    playFile(flightMode[m].sound .. '.wav')
@@ -378,10 +378,10 @@ local function drawCurr(x, y)
     elseif curr > post.curr then
         post.curr = curr
     end
-    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
-    lcd.drawText(x+2, y+4, 'Cur', MIDSIZE + INVERS)
-    lcd.drawNumber(x+30, y+4, curr*10, MIDSIZE + LEFT + PREC1)
-    lcd.drawText(getLastPos(), y+7, 'A', 0)
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, LINE_COLOR + SOLID)
+    lcd.drawText(x+2, y+4, 'Cur', TEXT_COLOR + MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, curr*10, TEXT_COLOR + MIDSIZE + LEFT + PREC1)
+    lcd.drawText(getLastPos(), y+7, 'A', TEXT_COLOR)
 end
 
 
@@ -389,10 +389,10 @@ local function drawDist(x, y)
     local dist = getValue('Dist')
     local unit = 'm'
     if imperial ~= 0 then unit = 'ft' end
-    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
-    lcd.drawText(x+2, y+4, 'Dst', MIDSIZE + INVERS)
-    lcd.drawNumber(x+30, y+4, dist, MIDSIZE + LEFT)
-    lcd.drawText(getLastPos(), y+7, unit, 0)
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, LINE_COLOR + SOLID)
+    lcd.drawText(x+2, y+4, 'Dst', TEXT_COLOR + MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, dist, TEXT_COLOR + MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, unit, TEXT_COLOR)
 end
 
 
@@ -405,10 +405,10 @@ local function drawAltitude(x, y)
     elseif altitude > post.altd then
         post.altd = altitude
     end
-    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
-    lcd.drawText(x+2, y+4, 'Alt', MIDSIZE + INVERS)
-    lcd.drawNumber(x+30, y+4, altitude, MIDSIZE + LEFT)
-    lcd.drawText(getLastPos(), y+7, unit, 0)
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, LINE_COLOR + SOLID)
+    lcd.drawText(x+2, y+4, 'Alt', TEXT_COLOR + MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, altitude, TEXT_COLOR + MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, unit, TEXT_COLOR)
 end
 
 
@@ -427,19 +427,19 @@ local function drawSpeed(x, y)
     elseif speed > post.gspd then
         post.gspd = speed
     end
-    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
-    lcd.drawText(x+2, y+4, 'Spd', MIDSIZE + INVERS)
-    lcd.drawNumber(x+30, y+4, speed, MIDSIZE + LEFT)
-    lcd.drawText(getLastPos(), y+7, unit, 0)
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, LINE_COLOR + SOLID)
+    lcd.drawText(x+2, y+4, 'Spd', TEXT_COLOR + MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, speed, TEXT_COLOR + MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, unit, TEXT_COLOR)
 end
 
 
 local function drawHeading(x, y)
     local heading = getValue('Hdg')
-    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
-    lcd.drawText(x+2, y+4, 'Hdg', MIDSIZE + INVERS)
-    lcd.drawNumber(x+30, y+4, heading, MIDSIZE + LEFT)
-    lcd.drawText(getLastPos(), y+7, 'dg', 0)
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, LINE_COLOR + SOLID)
+    lcd.drawText(x+2, y+4, 'Hdg', TEXT_COLOR + MIDSIZE + INVERS)
+    lcd.drawNumber(x+30, y+4, heading, TEXT_COLOR + MIDSIZE + LEFT)
+    lcd.drawText(getLastPos(), y+7, 'dg', TEXT_COLOR)
 end
 
 
@@ -456,8 +456,8 @@ local function drawTimer(x, y)
         style = style + INVERS
         xx = 36
     end
-    lcd.drawFilledRectangle(x+1, y+2, 26, 16, SOLID)
-    lcd.drawText(x+2, y+4, 'Tmr', MIDSIZE + INVERS)
+    lcd.drawFilledRectangle(x+1, y+2, 26, 16, LINE_COLOR + SOLID)
+    lcd.drawText(x+2, y+4, 'Tmr', TEXT_COLOR + MIDSIZE + INVERS)
     lcd.drawTimer(x+xx, y+4, timer, style)
 end
 
@@ -521,7 +521,7 @@ local function refresh(zone)
         end
 
         for row=1, #layout[col] do
-            lcd.drawLine(x, y, x+w, y, SOLID, GREY_DEFAULT)
+            lcd.drawLine(x, y, x+w, y, SOLID, GREY)
             widget[layout[col][row]](x+1, y+1) --call widget
             y = y + math.floor(LCD_H / #layout[col])
         end
