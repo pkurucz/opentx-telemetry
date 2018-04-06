@@ -64,7 +64,8 @@ flightMode[15] = { name = 'Acro Plus',	sound = 'fm-acrp',	style = 0 }
 flightMode[16] = { name = 'Acro Dyne',	sound = 'fm-acrd',	style = 0 }
 flightMode[17] = { name = 'LQG Acro',	sound = 'fm-acr',	style = 0 }
 flightMode[18] = { name = 'LQG Level',	sound = 'fm-lvl',	style = 0 }
-flightMode[19] = { name = 'Fail Safe',	sound = 'fm-fail',	style = BLINK }
+flightMode[19] = { name = 'Flip Over',	sound = 'fm-flip',	style = 0 }
+flightMode[20] = { name = 'Fail Safe',	sound = 'fm-fail',	style = BLINK }
 
 local bars = {}
 for i=1, 10 do bars[i] = {} end
