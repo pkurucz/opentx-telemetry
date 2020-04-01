@@ -2,15 +2,20 @@
 **[OpenTX](http://www.Open-TX.org) Telemetry Script for Taranis X9D Plus
 with X-Series Receiver**
 
-Based on [_olimetry.lua_](http://YouTu.be/dMNDhq2QJv4) by Ollicious (bowdown@gmx.net)
+**[OpenTX](http://www.open-tx.org) Telemetry Script for Taranis X9D Plus using 
+[Eagletree Vector Open Telemetry (Serial 57600 baud) -> TBS BST (Blacksheep telemetry)](https://github.com/pkurucz/opentelem_to_bst_bridge)**
+
+Based on [yds/opentx-telemetry](https://github.com/yds/opentx-telemetry/tree/dRonin) by YDS
 
 ## About
-This is a simplified and stripped-down variant of the _olimetry.lua_ script
-by Ollicious. It does not offer the same degree of customizability, as it
-only provides a subset of the original widgets.
+This script is customized to work with the Eagletree Vector Flight controller.
+
+Initial hardware support for TBS crossfire via: [opentelem_to_bst_bridge](https://github.com/pkurucz/opentelem_to_bst_bridge).
+
+Follow-on support for Dragonlink to be added.
 
 ## Features
-* Automatic Flight Mode detection from [dRonin](http://dRonin.org) and voice callouts
+* Automatic Flight Mode detection from and voice callouts
 * Automatic detection of **1S**, **2S**, **3S**, **4S**, **6S** or **8S**
   _LiPo_ or _LiHV_, but not **5S** nor **7S**
 * Automatic selection of voltage source among _FrSky_ `FLVSS`, `Cels` or `VFAS`
