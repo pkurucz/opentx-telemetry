@@ -1,6 +1,6 @@
 # OpenTX-Telemetry
 **[OpenTX](http://www.open-tx.org) Telemetry Script for Taranis X9D Plus 
-[Eagletree Vector Open Telemetry (Serial 57600 baud) -> TBS BST (Blacksheep telemetry)](https://github.com/pkurucz/opentelem_to_bst_bridge)**
+and the Eagletree Vector Flight controller.
 
 Based on [yds/opentx-telemetry](https://github.com/yds/opentx-telemetry/tree/dRonin) 
 for dRonin by YDS
@@ -8,7 +8,7 @@ for dRonin by YDS
 ## About
 This script is customized to work with the Eagletree Vector Flight controller.
 
-Initial hardware support for TBS crossfire via: [opentelem_to_bst_bridge](https://github.com/pkurucz/opentelem_to_bst_bridge).
+Initial hardware support for telemetry over TBS crossfire via: [opentelem_to_bst_bridge](https://github.com/pkurucz/opentelem_to_bst_bridge).
 
 Follow-on support for Dragonlink to be added. (Stay tuned)
 
